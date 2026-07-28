@@ -1,0 +1,93 @@
+# Env
+.env
+.env.*
+*.env
+!.env.example
+
+# Python — bytecode / cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Python — virtualenvs
+.venv/
+venv/
+env/
+ENV/
+
+# Python — tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pytype/
+.pyre/
+.dmypy.json
+dmypy.json
+
+# Python — coverage / test
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+.hypothesis/
+.tox/
+.nox/
+
+# Python — packaging
+*.egg-info/
+*.egg
+.eggs/
+pip-wheel-metadata/
+dist/
+build/
+sdist/
+wheels/
+
+# Node / frontend
+node_modules/
+.pnp/
+.pnp.js
+.yarn/
+.pnpm-store/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Frontend build / cache
+.vite/
+.cache/
+.parcel-cache/
+.turbo/
+.next/
+.nuxt/
+coverage/
+
+# IDE / editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Data / databases
+data/
+volumes/
+*.sqlite
+*.sqlite3
+*.db
+
+# Misc
+*.pid
+*.seed
+tmp/
+temp/
