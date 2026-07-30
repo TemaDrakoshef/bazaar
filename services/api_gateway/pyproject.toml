@@ -1,0 +1,18 @@
+[project]
+name = "api-gateway"
+version = "0.1.0"
+description = "HTTP REST -> gRPC API Gateway"
+requires-python = ">=3.12"
+authors = [
+    { name = "TemaDrakoshef", email = "artem125149@gmail.com" },
+]
+dependencies = [
+    "fastapi[standart]>=0.140.7",
+    "protobuf>=7.35.1",
+    "pydantic-settings>=2.14.2",
+    "uvicorn>=0.51.0",
+]
+
+[tool.uv]
+package = false
+
