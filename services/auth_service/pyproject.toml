@@ -13,6 +13,7 @@ dependencies = [
     "grpcio>=1.83.0",
     "protobuf>=7.35.1",
     "pydantic-settings>=2.14.2",
+    "pydantic[email]>=2.13.4",
     "python-jose[cryptography]>=3.5.0",
     "sqlalchemy>=2.0.51",
 ]
