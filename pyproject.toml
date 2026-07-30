@@ -34,6 +34,8 @@ exclude = [
     "build",
     "dist",
     "frontend",
+    "**/generated/**",
+    "**/generated",
 ]
 
 [tool.ruff.lint]
@@ -44,8 +46,8 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-combine-as-imports = true
-known-first-party = ["libs", "services"]
+combine-as-imports = false
+known-first-party = ["src", "services"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -66,5 +68,6 @@ plugins = [
 exclude = [
     "frontend",
     "venv",
-    ".venv"
+    ".venv",
+    "(?i)(^|/)generated(/|$)"
 ]
