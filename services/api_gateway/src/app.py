@@ -3,13 +3,16 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.clients.grpc_channels import Channels
 from src.core.settings import settings
 from src.routers import api_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    app.state.channels = Channels()
     yield
+    await app.state.channels.close()
 
 
 def create_app() -> FastAPI:
