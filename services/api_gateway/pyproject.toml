@@ -8,6 +8,7 @@ authors = [
 ]
 dependencies = [
     "fastapi[standard]>=0.141.1",
+    "grpcio>=1.83.0",
     "protobuf>=7.35.1",
     "pydantic-settings>=2.14.2",
     "uvicorn>=0.51.0",
@@ -15,4 +16,9 @@ dependencies = [
 
 [tool.uv]
 package = false
+
+[dependency-groups]
+dev = [
+    "grpcio-tools>=1.83.0",
+]
 
