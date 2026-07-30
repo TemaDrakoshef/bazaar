@@ -1,0 +1,7 @@
+include:
+  - services/auth_service/docker-compose.yml
+  - services/api_gateway/docker-compose.yml
+
+networks:
+  app-network:
+    driver: bridge
