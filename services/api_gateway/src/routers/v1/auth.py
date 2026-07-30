@@ -1,51 +1,20 @@
 import grpc.aio
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
 
 from src.clients.auth_client import AuthClient
 from src.dependencies import get_auth_client
 from src.exceptions import grpc_error_to_http
+from src.schemas.auth import (
+    LoginRequest,
+    LoginResponse,
+    LogoutRequest,
+    RefreshRequest,
+    RefreshResponse,
+    SignUpRequest,
+    SignUpResponse,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
-
-# ---------- Request / Response models ----------
-
-
-class SignUpRequest(BaseModel):
-    email: str
-    phone: str
-    password: str
-
-
-class SignUpResponse(BaseModel):
-    access_token: str
-    refresh_token: str
-
-
-class LoginRequest(BaseModel):
-    email: str
-    password: str
-
-
-class LoginResponse(BaseModel):
-    access_token: str
-    refresh_token: str
-
-
-class LogoutRequest(BaseModel):
-    session_id: str
-
-
-class RefreshRequest(BaseModel):
-    refresh_token: str
-
-
-class RefreshResponse(BaseModel):
-    access_token: str
-
-
-# ---------- Endpoints ----------
 
 
 @router.post("/signup", response_model=SignUpResponse, status_code=201)
