@@ -7,6 +7,7 @@ authors = [
     { name = "TemaDrakoshef", email = "artem125149@gmail.com" },
 ]
 dependencies = [
+    "alembic>=1.18.5",
     "protobuf>=7.35.1",
     "pydantic-settings>=2.14.2",
     "sqlalchemy>=2.0.51",
