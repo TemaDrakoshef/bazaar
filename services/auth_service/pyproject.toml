@@ -7,6 +7,8 @@ authors = [
     { name = "TemaDrakoshef", email = "artem125149@gmail.com" },
 ]
 dependencies = [
+    "grpcio>=1.83.0",
+    "grpcio-tools>=1.83.0",
     "protobuf>=7.35.1",
     "pydantic-settings>=2.14.2",
 ]
