@@ -1,0 +1,16 @@
+services:
+  api_gateway:
+    build: .
+    container_name: api_gateway
+    env_file: .env
+    restart: on-failure:5
+    ports:
+      - "8000:8000"
+    depends_on:
+      - auth_service
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
