@@ -3,7 +3,7 @@ from datetime import datetime
 
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.persistence.database import Base
+from src.persistence.models.base import Base
 
 
 class Account(Base):

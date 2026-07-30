@@ -4,7 +4,7 @@ import uuid
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.persistence.database import Base
+from src.persistence.models.base import Base
 
 
 class Session(Base):
