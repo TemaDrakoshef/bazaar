@@ -1,0 +1,48 @@
+services:
+  auth_db:
+    image: postgres:16
+    container_name: auth_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - auth_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - app-network
+
+  auth_migrations:
+    build: .
+    container_name: auth_migrations
+    env_file: .env
+    command: [ "alembic", "upgrade", "head" ]
+    depends_on:
+      auth_db:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  auth_service:
+    build: .
+    container_name: auth_service
+    env_file: .env
+    restart: on-failure:5
+    networks:
+      - app-network
+    depends_on:
+      auth_db:
+        condition: service_healthy
+      auth_migrations:
+        condition: service_completed_successfully
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  auth_postgres_data:
