@@ -8,8 +8,10 @@ authors = [
 ]
 dependencies = [
     "alembic>=1.18.5",
+    "bcrypt>=5.0.0",
     "protobuf>=7.35.1",
     "pydantic-settings>=2.14.2",
+    "python-jose[cryptography]>=3.5.0",
     "sqlalchemy>=2.0.51",
 ]
 
