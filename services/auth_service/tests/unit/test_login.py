@@ -1,0 +1,68 @@
+"""Unit tests for the Login usecase (no database, fake repositories)."""
+
+import pytest
+from tests.conftest import make_account, make_session
+
+from src.domain.exceptions import InvalidCredentialsError
+from src.usecase.base import AuthBaseUsecase
+from src.usecase.login.request import LoginRequest
+from src.usecase.login.usecase import LoginUsecase
+
+PASSWORD = "S3cr3t-pass!"
+
+
+def _hashed_account(**kwargs):
+    """Build an account whose password_hash matches PASSWORD."""
+    account = make_account(password_hash=AuthBaseUsecase.hash_password(PASSWORD))
+    for key, value in kwargs.items():
+        setattr(account, key, value)
+    return account
+
+
+async def test_login_success_returns_user_and_session_tokens(fake_uow):
+    account = _hashed_account(email="user@example.com")
+    session = make_session(user_id=account.id)
+    uow = fake_uow(accounts=[account], sessions=[session])
+    uc = LoginUsecase(uow=uow)
+
+    result = await uc.execute(LoginRequest(email="user@example.com", password=PASSWORD))
+
+    assert result.access_token
+    assert result.refresh_token
+    assert uow.committed
+    assert session.is_active is True
+
+    access_payload = AuthBaseUsecase.decode_token(result.access_token)
+    assert access_payload["user_id"] == str(account.id)
+
+
+async def test_login_unknown_email_raises(fake_uow):
+    uow = fake_uow()
+    uc = LoginUsecase(uow=uow)
+
+    with pytest.raises(InvalidCredentialsError):
+        await uc.execute(LoginRequest(email="ghost@example.com", password=PASSWORD))
+    assert not uow.committed
+
+
+async def test_login_wrong_password_raises(fake_uow):
+    account = _hashed_account(email="user@example.com")
+    session = make_session(user_id=account.id)
+    uow = fake_uow(accounts=[account], sessions=[session])
+    uc = LoginUsecase(uow=uow)
+
+    with pytest.raises(InvalidCredentialsError):
+        await uc.execute(
+            LoginRequest(email="user@example.com", password="wrong-password")
+        )
+    assert not uow.committed
+
+
+async def test_login_without_active_session_raises(fake_uow):
+    account = _hashed_account(email="user@example.com")
+    uow = fake_uow(accounts=[account])
+    uc = LoginUsecase(uow=uow)
+
+    with pytest.raises(InvalidCredentialsError):
+        await uc.execute(LoginRequest(email="user@example.com", password=PASSWORD))
+    assert not uow.committed
