@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from src.persistence.repositories.account import AccountRepository
@@ -24,3 +26,6 @@ class SQLAlchemyUnitOfWork:
 
     async def rollback(self):
         await self._session.rollback()
+
+
+UowFactory = Callable[[], SQLAlchemyUnitOfWork]

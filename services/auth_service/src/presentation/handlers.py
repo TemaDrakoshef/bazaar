@@ -5,7 +5,7 @@ from grpc import ServicerContext
 from src.domain.exceptions import ApplicationError
 from src.generated.auth.v1 import auth_pb2, auth_pb2_grpc
 from src.persistence.database import async_session_maker
-from src.persistence.unit_of_work import SQLAlchemyUnitOfWork
+from src.persistence.unit_of_work import SQLAlchemyUnitOfWork, UowFactory
 from src.usecase.login.request import LoginRequest
 from src.usecase.login.usecase import LoginUsecase
 from src.usecase.logout.request import LogoutRequest
@@ -23,10 +23,13 @@ def _uow() -> SQLAlchemyUnitOfWork:
 
 
 class AuthServiceHandler(auth_pb2_grpc.AuthServiceServicer):
+    def __init__(self, uow_factory: UowFactory | None = None) -> None:
+        self._uow_factory = uow_factory or _uow
+
     async def SignUp(
         self, request: auth_pb2.SignUpRequest, context: ServicerContext
     ) -> auth_pb2.SignUpResponse:
-        uc = SignUpUsecase(uow=_uow())
+        uc = SignUpUsecase(uow=self._uow_factory())
         try:
             result = await uc.execute(
                 SignUpRequest(
@@ -46,7 +49,7 @@ class AuthServiceHandler(auth_pb2_grpc.AuthServiceServicer):
     async def Login(
         self, request: auth_pb2.LoginRequest, context: ServicerContext
     ) -> auth_pb2.LoginResponse:
-        uc = LoginUsecase(uow=_uow())
+        uc = LoginUsecase(uow=self._uow_factory())
         try:
             result = await uc.execute(
                 LoginRequest(email=request.email, password=request.password)
@@ -62,7 +65,7 @@ class AuthServiceHandler(auth_pb2_grpc.AuthServiceServicer):
     async def Logout(
         self, request: auth_pb2.LogoutRequest, context: ServicerContext
     ) -> auth_pb2.LogoutResponse:
-        uc = LogoutUsecase(uow=_uow())
+        uc = LogoutUsecase(uow=self._uow_factory())
         try:
             await uc.execute(LogoutRequest(session_id=UUID(request.session_id)))
         except ApplicationError as e:
@@ -73,7 +76,7 @@ class AuthServiceHandler(auth_pb2_grpc.AuthServiceServicer):
     async def Refresh(
         self, request: auth_pb2.RefreshRequest, context: ServicerContext
     ) -> auth_pb2.RefreshResponse:
-        uc = RefreshUsecase(uow=_uow())
+        uc = RefreshUsecase(uow=self._uow_factory())
         try:
             result = await uc.execute(
                 RefreshRequest(refresh_token=request.refresh_token)
