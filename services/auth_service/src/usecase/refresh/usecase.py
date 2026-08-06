@@ -15,7 +15,7 @@ class RefreshUsecase(AuthBaseUsecase):
 
     async def execute(self, request: RefreshRequest) -> RefreshResponse:
         try:
-            payload = self.decode_token(request.refresh_token)
+            payload = self.decode_token(request.refresh_token, expected_type="refresh")
         except JWTError as _ex:
             raise InvalidRefreshTokenError() from _ex
 
@@ -28,13 +28,24 @@ class RefreshUsecase(AuthBaseUsecase):
             if not session or not session.is_active:
                 raise SessionExpiredError()
 
+            presented_hash = self.hash_token(request.refresh_token)
+            if session.refresh_token_hash is None or (
+                presented_hash != session.refresh_token_hash
+            ):
+                raise InvalidRefreshTokenError()
+
+            new_refresh_token = self.create_refresh_token(session.id)
+
             await uow.session.update(
                 session.id,
+                refresh_token_hash=self.hash_token(new_refresh_token),
                 last_active_at=datetime.datetime.now(),
             )
 
-            access_token = self.create_access_token(session.user_id)
+            access_token = self.create_access_token(session.user_id, session.id)
 
             await uow.commit()
 
-        return RefreshResponse(access_token=access_token)
+        return RefreshResponse(
+            access_token=access_token, refresh_token=new_refresh_token
+        )
