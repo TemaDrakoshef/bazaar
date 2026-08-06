@@ -9,4 +9,5 @@ class SessionBase(BaseModel):
     user_id: UUID
     token: UUID
     is_active: bool
+    refresh_token_hash: str | None = None
     last_active_at: datetime.datetime

@@ -12,6 +12,13 @@ class ApplicationError(Exception):
         super().__init__(self.detail)
 
 
+class ValidationError(ApplicationError):
+    """Raised when the request payload fails business-rule validation."""
+
+    grpc_code = StatusCode.INVALID_ARGUMENT
+    message = "invalid input"
+
+
 class UserAlreadyExistsError(ApplicationError):
     """Raised when attempting to create a user that already exists."""
 
