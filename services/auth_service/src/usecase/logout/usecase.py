@@ -20,6 +20,7 @@ class LogoutUsecase(AuthBaseUsecase):
             await uow.session.update(
                 session.id,
                 is_active=False,
+                refresh_token_hash=None,
                 last_active_at=datetime.datetime.now(),
             )
 
