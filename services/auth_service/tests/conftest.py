@@ -37,6 +37,10 @@ class FakeAccountRepo:
 
     async def create(self, **values):
         values.setdefault("is_active", True)
+        if any(r.email == values.get("email") for r in self.records):
+            from src.domain.exceptions import UserAlreadyExistsError
+
+            raise UserAlreadyExistsError()
         record = types.SimpleNamespace(**values)
         self.records.append(record)
         return record
@@ -47,6 +51,7 @@ class FakeSessionRepo:
 
     def __init__(self) -> None:
         self.records: list[types.SimpleNamespace] = []
+        self.fail_on_create = False
 
     async def get_one_or_none(self, **filters):
         for record in self.records:
@@ -61,6 +66,8 @@ class FakeSessionRepo:
         return None
 
     async def create(self, **values):
+        if self.fail_on_create:
+            raise RuntimeError("session create failed")
         values.setdefault("is_active", True)
         record = types.SimpleNamespace(**values)
         self.records.append(record)
@@ -76,7 +83,12 @@ class FakeSessionRepo:
 
 
 class FakeUnitOfWork:
-    """In-memory unit of work used to drive usecases without a database."""
+    """In-memory unit of work used to drive usecases without a database.
+
+    ``commit`` records the fact of a commit; ``rollback`` restores the
+    repositories to the state captured when the unit of work was entered, so
+    errors mid-transaction behave like a real database rollback.
+    """
 
     def __init__(self, accounts=(), sessions=()):
         self.account = FakeAccountRepo()
@@ -86,18 +98,30 @@ class FakeUnitOfWork:
         for session in sessions:
             self.session.records.append(session)
         self.committed = False
+        self.rolled_back = False
+        self._snapshots: tuple[list, list] | None = None
+
+    def _snapshot(self):
+        return (list(self.account.records), list(self.session.records))
 
     async def __aenter__(self):
+        self.committed = False
+        self.rolled_back = False
+        self._snapshots = self._snapshot()
         return self
 
-    async def __aexit__(self, *exc):
+    async def __aexit__(self, exc_type, exc, tb):
+        if exc_type is not None:
+            await self.rollback()
         return False
 
     async def commit(self):
         self.committed = True
 
     async def rollback(self):
-        pass
+        if self._snapshots is not None:
+            self.account.records, self.session.records = self._snapshots
+        self.rolled_back = True
 
 
 def make_account(
@@ -120,6 +144,7 @@ def make_session(
     user_id: UUID,
     is_active: bool = True,
     id_: UUID | None = None,
+    refresh_token_hash: str | None = None,
 ) -> types.SimpleNamespace:
     import datetime
 
@@ -127,8 +152,18 @@ def make_session(
         id=id_ or uuid.uuid4(),
         user_id=user_id,
         is_active=is_active,
+        refresh_token_hash=refresh_token_hash,
         last_active_at=datetime.datetime.now(),
     )
+
+
+def unique_email() -> str:
+    """Return a collision-free email for a single test run."""
+    return f"user-{uuid.uuid4().hex[:12]}@example.com"
+
+
+def unique_phone() -> str:
+    return f"+7999{uuid.uuid4().hex[:9]}"
 
 
 @pytest.fixture
@@ -137,6 +172,22 @@ def fake_uow():
 
     def _factory(accounts=(), sessions=()):
         return FakeUnitOfWork(accounts=accounts, sessions=sessions)
+
+    return _factory
+
+
+@pytest.fixture
+def create_account():
+    """Factory helper building an account with a known (hashed) password."""
+
+    def _factory(email=None, *, is_active: bool = True, password: str = "S3cr3t-pass!"):
+        from src.usecase.base import AuthBaseUsecase
+
+        return make_account(
+            email=email or unique_email(),
+            password_hash=AuthBaseUsecase.hash_password(password),
+            is_active=is_active,
+        )
 
     return _factory
 
