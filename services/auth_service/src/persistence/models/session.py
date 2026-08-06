@@ -17,4 +17,5 @@ class Session(Base):
         ForeignKey("accounts.id"), nullable=False
     )
     is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
+    refresh_token_hash: Mapped[str | None] = mapped_column(nullable=True)
     last_active_at: Mapped[datetime.datetime] = mapped_column(nullable=False)
