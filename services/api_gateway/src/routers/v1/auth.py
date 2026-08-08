@@ -12,6 +12,8 @@ from src.schemas.auth import (
     RefreshResponse,
     SignUpRequest,
     SignUpResponse,
+    ValidateRequest,
+    ValidateResponse,
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -24,7 +26,7 @@ async def sign_up(
 ) -> SignUpResponse:
     try:
         resp = await auth_client.sign_up(
-            email=body.email, phone=body.phone, password=body.password
+            email=body.email, phone=body.phone or "", password=body.password
         )
     except grpc.aio.AioRpcError as exc:
         raise grpc_error_to_http(exc) from exc
@@ -68,3 +70,19 @@ async def refresh(
     except grpc.aio.AioRpcError as exc:
         raise grpc_error_to_http(exc) from exc
     return RefreshResponse(access_token=resp.access_token)
+
+
+@router.post("/validate", response_model=ValidateResponse)
+async def validate(
+    body: ValidateRequest,
+    auth_client: AuthClient = Depends(get_auth_client),
+) -> ValidateResponse:
+    try:
+        resp = await auth_client.validate_token(access_token=body.access_token)
+    except grpc.aio.AioRpcError as exc:
+        raise grpc_error_to_http(exc) from exc
+    return ValidateResponse(
+        valid=resp.valid,
+        user_id=resp.user_id or None,
+        error_message=resp.error_message,
+    )
