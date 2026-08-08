@@ -7,6 +7,8 @@ _GRPC_TO_HTTP: dict[grpc.StatusCode, int] = {
     grpc.StatusCode.ALREADY_EXISTS: 409,
     grpc.StatusCode.PERMISSION_DENIED: 403,
     grpc.StatusCode.UNAUTHENTICATED: 401,
+    grpc.StatusCode.UNAVAILABLE: 503,
+    grpc.StatusCode.DEADLINE_EXCEEDED: 503,
 }
 
 
