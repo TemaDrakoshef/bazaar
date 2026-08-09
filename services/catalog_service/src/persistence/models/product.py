@@ -7,10 +7,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.persistence.models.base import Base
 
 if TYPE_CHECKING:
-    from src.persistence.models.category import Category
+    from src.persistence.models.category import CategoryORM
 
 
-class Product(Base):
+class ProductORM(Base):
     """Represents a product in the system."""
 
     __tablename__ = "products"
@@ -29,4 +29,6 @@ class Product(Base):
         nullable=False, default=datetime.now, onupdate=datetime.now
     )
 
-    category: Mapped["Category"] = relationship("Category", back_populates="products")
+    category: Mapped["CategoryORM"] = relationship(
+        "CategoryORM", back_populates="products"
+    )

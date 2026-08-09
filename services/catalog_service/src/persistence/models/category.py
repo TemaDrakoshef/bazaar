@@ -8,10 +8,10 @@ from sqlalchemy_utils import LtreeType
 from src.persistence.models.base import Base
 
 if TYPE_CHECKING:
-    from src.persistence.models.product import Product
+    from src.persistence.models.product import ProductORM
 
 
-class Category(Base):
+class CategoryORM(Base):
     """Represents a product category using PostgreSQL LTREE."""
 
     __tablename__ = "categories"
@@ -25,8 +25,8 @@ class Category(Base):
         nullable=False, default=datetime.now, onupdate=datetime.now
     )
 
-    products: Mapped[list["Product"]] = relationship(
-        "Product", back_populates="category"
+    products: Mapped[list["ProductORM"]] = relationship(
+        "ProductORM", back_populates="category"
     )
 
     __table_args__ = (Index("ix_categories_path", "path", postgresql_using="gist"),)
