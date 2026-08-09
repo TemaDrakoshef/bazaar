@@ -9,6 +9,7 @@ authors = [
 dependencies = [
     "alembic>=1.18.5",
     "asyncpg>=0.31.0",
+    "dishka>=1.10.0",
     "grpcio>=1.83.0",
     "protobuf>=7.35.1",
     "pydantic-settings>=2.14.2",
