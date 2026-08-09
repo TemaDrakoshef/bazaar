@@ -1,9 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from services.catalog_service.src.infrastructure.database.models.product import (
+from src.infrastructure.database.models.product import (
     ProductORM,
 )
-from services.catalog_service.src.infrastructure.database.repositories.base import (
+from src.infrastructure.database.repositories.base import (
     BaseRepository,
 )
 
