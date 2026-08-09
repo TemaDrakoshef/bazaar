@@ -1,0 +1,25 @@
+[project]
+name = "catalog-service"
+version = "0.1.0"
+description = "Catalog microservice"
+requires-python = ">=3.12"
+authors = [
+    { name = "TemaDrakoshef", email = "artem125149@gmail.com" },
+]
+dependencies = [
+    "alembic>=1.18.5",
+    "asyncpg>=0.31.0",
+    "grpcio>=1.83.0",
+    "protobuf>=7.35.1",
+    "pydantic-settings>=2.14.2",
+    "sqlalchemy>=2.0.51",
+    "sqlalchemy-utils>=0.42.1",
+]
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = [
+    "grpcio-tools>=1.83.0",
+]
