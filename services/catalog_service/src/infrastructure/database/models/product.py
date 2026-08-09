@@ -4,10 +4,12 @@ from typing import TYPE_CHECKING
 from sqlalchemy import BigInteger, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.persistence.models.base import Base
+from src.infrastructure.database.models.base import Base
 
 if TYPE_CHECKING:
-    from src.persistence.models.category import CategoryORM
+    from src.infrastructure.database.models.category import (
+        CategoryORM,
+    )
 
 
 class ProductORM(Base):

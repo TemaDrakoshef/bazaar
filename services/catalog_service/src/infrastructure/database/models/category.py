@@ -5,10 +5,12 @@ from sqlalchemy import BigInteger, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils import LtreeType
 
-from src.persistence.models.base import Base
+from src.infrastructure.database.models.base import Base
 
 if TYPE_CHECKING:
-    from src.persistence.models.product import ProductORM
+    from src.infrastructure.database.models.product import (
+        ProductORM,
+    )
 
 
 class CategoryORM(Base):

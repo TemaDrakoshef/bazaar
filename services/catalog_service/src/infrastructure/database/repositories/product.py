@@ -1,7 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.persistence.models.product import ProductORM
-from src.persistence.repositories.base import BaseRepository
+from services.catalog_service.src.infrastructure.database.models.product import (
+    ProductORM,
+)
+from services.catalog_service.src.infrastructure.database.repositories.base import (
+    BaseRepository,
+)
 
 
 class ProductRepository(BaseRepository):

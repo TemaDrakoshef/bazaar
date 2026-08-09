@@ -2,8 +2,8 @@ from collections.abc import Callable
 
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from src.persistence.repositories.account import AccountRepository
-from src.persistence.repositories.session import SessionRepository
+from src.infrastructure.database.repositories.category import CategoryRepository
+from src.infrastructure.database.repositories.product import ProductRepository
 
 
 class SQLAlchemyUnitOfWork:
@@ -12,8 +12,8 @@ class SQLAlchemyUnitOfWork:
 
     async def __aenter__(self):
         self._session = self._session_maker()
-        self.account = AccountRepository(self._session)
-        self.session = SessionRepository(self._session)
+        self.product = ProductRepository(self._session)
+        self.category = CategoryRepository(self._session)
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
