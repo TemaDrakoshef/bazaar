@@ -1,18 +1,41 @@
 from collections.abc import AsyncIterable
 
 from dishka import Provider, Scope, provide
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
 from src.application.use_cases.create_product import CreateProductUseCase
 from src.domain.interfaces.unit_of_work import AbstractUnitOfWork
-from src.infrastructure.database.database import async_session_maker
+from src.infrastructure.config.settings import Settings
 from src.infrastructure.database.unit_of_work import SQLAlchemyUnitOfWork
 
 
 class CatalogProvider(Provider):
     @provide(scope=Scope.APP)
-    def provide_session_factory(self) -> async_sessionmaker[AsyncSession]:
-        return async_session_maker
+    def provide_settings(self) -> Settings:
+        return Settings()
+
+    @provide(scope=Scope.APP)
+    async def provide_engine(
+        self, settings: Settings
+    ) -> AsyncIterable[AsyncEngine]:
+        engine = create_async_engine(settings.DATABASE_URL)
+        try:
+            yield engine
+        finally:
+            await engine.dispose()
+
+    @provide(scope=Scope.APP)
+    def provide_session_factory(
+        self, engine: AsyncEngine
+    ) -> async_sessionmaker[AsyncSession]:
+        return async_sessionmaker(
+            engine, class_=AsyncSession, expire_on_commit=False
+        )
 
     @provide(scope=Scope.REQUEST)
     async def provide_session(
