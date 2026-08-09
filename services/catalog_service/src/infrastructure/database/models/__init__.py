@@ -1,9 +1,9 @@
 from .base import Base
-from .category import Category
-from .product import Product
+from .category import CategoryORM
+from .product import ProductORM
 
 __all__ = (
-    "Category",
-    "Product",
     "Base",
+    "CategoryORM",
+    "ProductORM",
 )
