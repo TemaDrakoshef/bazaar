@@ -19,7 +19,10 @@ class ProductORM(Base):
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     category_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("categories.id", ondelete="RESTRICT"), nullable=False
+        BigInteger,
+        ForeignKey("categories.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
     )
     title: Mapped[str] = mapped_column(nullable=False)
     description: Mapped[str] = mapped_column(nullable=True)
