@@ -1,0 +1,105 @@
+syntax = "proto3";
+
+package catalog.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+
+service CatalogService {
+  // Product CRUD
+  rpc CreateProduct(CreateProductRequest) returns (Product);
+  rpc ReadProduct(ProductIdRequest) returns (Product);
+  rpc ReadListProducts(ListProductsRequest) returns (ListProductsResponse);
+  rpc UpdateProduct(UpdateProductRequest) returns (Product);
+  rpc DeleteProduct(ProductIdRequest) returns (google.protobuf.Empty);
+
+  // Category CRUD
+  rpc CreateCategory(CreateCategoryRequest) returns (Category);
+  rpc ReadCategory(CategoryIdRequest) returns (Category);
+  rpc ReadListCategories(ListCategoriesRequest) returns (ListCategoriesResponse);
+  rpc UpdateCategory(UpdateCategoryRequest) returns (Category);
+  rpc DeleteCategory(CategoryIdRequest) returns (google.protobuf.Empty);
+}
+
+
+// common
+
+message ProductIdRequest {
+  int64 product_id = 1;
+}
+
+message CategoryIdRequest {
+  int64 category_id = 1;
+}
+
+// product
+
+message Product {
+  int64 id = 1;
+  int64 category_id = 2;
+  string title = 3;
+  optional string description = 4;
+  int32 price = 5;
+  int32 stock = 6;
+  bool is_active = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}
+
+message CreateProductRequest {
+  int64 category_id = 1;
+  string title = 2;
+  optional string description = 3;
+  int32 price = 5;
+  int32 stock = 6;
+}
+
+message ListProductsRequest {
+  int32 limit = 1;   // page size, >0
+  int32 offset = 2;  // >=0
+}
+
+message ListProductsResponse {
+  repeated Product products = 1;
+  int64 count = 2;
+}
+
+message UpdateProductRequest {
+  int64 product_id = 1;
+  optional int64 category_id = 2;
+  optional string title = 3;
+  optional string description = 4;
+  optional int32 price = 5;
+  optional int32 stock = 6;
+  optional bool is_active = 7;
+}
+
+// category
+
+message Category {
+  int64 id = 1;
+  string name = 2;
+  string path = 3;
+  bool is_active = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+message CreateCategoryRequest {
+  string name = 1;
+  string path = 2;
+}
+
+message ListCategoriesRequest {}
+
+message ListCategoriesResponse {
+  repeated Category categories = 1;
+}
+
+message UpdateCategoryRequest {
+  int64 category_id = 1;
+  optional string name = 2;
+  optional string path = 3;
+  optional bool is_active = 4;
+}
