@@ -20,9 +20,7 @@ class CatalogProvider(Provider):
         return Settings()
 
     @provide(scope=Scope.APP)
-    async def provide_engine(
-        self, settings: Settings
-    ) -> AsyncIterable[AsyncEngine]:
+    async def provide_engine(self, settings: Settings) -> AsyncIterable[AsyncEngine]:
         engine = create_async_engine(settings.DATABASE_URL)
         try:
             yield engine
@@ -33,9 +31,7 @@ class CatalogProvider(Provider):
     def provide_session_factory(
         self, engine: AsyncEngine
     ) -> async_sessionmaker[AsyncSession]:
-        return async_sessionmaker(
-            engine, class_=AsyncSession, expire_on_commit=False
-        )
+        return async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     @provide(scope=Scope.REQUEST)
     async def provide_session(
