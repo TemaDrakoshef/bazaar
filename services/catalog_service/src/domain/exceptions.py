@@ -10,3 +10,8 @@ class ApplicationError(Exception):
     def __init__(self, detail: str | None = None):
         self.detail = detail or self.message
         super().__init__(self.detail)
+
+
+class CategoryNotFoundError(ApplicationError):
+    grpc_code = StatusCode.NOT_FOUND
+    message = "category not found"
