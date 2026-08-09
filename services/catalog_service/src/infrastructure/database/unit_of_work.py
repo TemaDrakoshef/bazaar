@@ -2,11 +2,12 @@ from collections.abc import Callable
 
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
+from src.domain.interfaces.unit_of_work import AbstractUnitOfWork
 from src.infrastructure.database.repositories.category import CategoryRepository
 from src.infrastructure.database.repositories.product import ProductRepository
 
 
-class SQLAlchemyUnitOfWork:
+class SQLAlchemyUnitOfWork(AbstractUnitOfWork):
     def __init__(self, session_maker: async_sessionmaker):
         self._session_maker = session_maker
 
