@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
+from src.application.use_cases.create_category import CreateCategoryUseCase
 from src.application.use_cases.create_product import CreateProductUseCase
 from src.domain.interfaces.unit_of_work import AbstractUnitOfWork
 from src.infrastructure.config.settings import Settings
@@ -47,3 +48,7 @@ class CatalogProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def provide_create_product(self, uow: AbstractUnitOfWork) -> CreateProductUseCase:
         return CreateProductUseCase(uow)
+
+    @provide(scope=Scope.REQUEST)
+    def provide_create_category(self, uow: AbstractUnitOfWork) -> CreateCategoryUseCase:
+        return CreateCategoryUseCase(uow)

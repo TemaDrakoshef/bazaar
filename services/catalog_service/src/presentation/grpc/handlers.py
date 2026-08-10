@@ -4,7 +4,11 @@ from dishka.integrations.grpcio import FromDishka, inject
 from google.protobuf.timestamp_pb2 import Timestamp
 from grpc import ServicerContext
 
+from src.application.use_cases.create_category import (
+    CreateCategoryUseCase,
+)
 from src.application.use_cases.create_product import CreateProductUseCase
+from src.domain.dtos.category import CategoryCreateDTO
 from src.domain.dtos.product import ProductCreateDTO
 from src.domain.exceptions import ApplicationError
 from src.generated.catalog.v1 import catalog_pb2, catalog_pb2_grpc
@@ -45,6 +49,31 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
             price=result.price,
             stock=result.stock,
             is_active=result.is_active,
+            created_at=_to_timestamp(result.created_at),
+            updated_at=_to_timestamp(result.updated_at),
+        )
+
+    @inject
+    async def CreateCategory(
+        self,
+        request: catalog_pb2.CreateCategoryRequest,
+        context: ServicerContext,
+        create_category: FromDishka["CreateCategoryUseCase"],
+    ) -> catalog_pb2.Category:
+        try:
+            result = await create_category(
+                CategoryCreateDTO(
+                    name=request.name,
+                    parent_id=request.parent_id,
+                )
+            )
+        except ApplicationError as exc:
+            await context.abort(exc.grpc_code, exc.detail)
+
+        return catalog_pb2.Category(
+            id=result.id,
+            name=result.name,
+            path=result.path,
             created_at=_to_timestamp(result.created_at),
             updated_at=_to_timestamp(result.updated_at),
         )
