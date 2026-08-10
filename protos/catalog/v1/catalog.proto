@@ -88,7 +88,7 @@ message Category {
 
 message CreateCategoryRequest {
   string name = 1;
-  optional string parent_id = 2;
+  optional int64 parent_id = 2;
 }
 
 message ListCategoriesRequest {}

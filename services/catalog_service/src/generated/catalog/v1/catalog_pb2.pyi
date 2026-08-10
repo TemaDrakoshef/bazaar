@@ -113,8 +113,8 @@ class CreateCategoryRequest(_message.Message):
     NAME_FIELD_NUMBER: _ClassVar[int]
     PARENT_ID_FIELD_NUMBER: _ClassVar[int]
     name: str
-    parent_id: str
-    def __init__(self, name: _Optional[str] = ..., parent_id: _Optional[str] = ...) -> None: ...
+    parent_id: int
+    def __init__(self, name: _Optional[str] = ..., parent_id: _Optional[int] = ...) -> None: ...
 
 class ListCategoriesRequest(_message.Message):
     __slots__ = ()
