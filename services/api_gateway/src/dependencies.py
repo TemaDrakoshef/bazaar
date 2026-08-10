@@ -3,6 +3,7 @@ from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from src.clients.auth_client import AuthClient
+from src.clients.catalog_client import CatalogClient
 from src.exceptions import grpc_error_to_http
 
 _bearer = HTTPBearer(auto_error=False)
@@ -10,6 +11,10 @@ _bearer = HTTPBearer(auto_error=False)
 
 def get_auth_client(request: Request) -> AuthClient:
     return AuthClient(request.app.state.channels.auth)
+
+
+def get_catalog_client(request: Request) -> CatalogClient:
+    return CatalogClient(request.app.state.channels.catalog)
 
 
 async def get_current_user_id(

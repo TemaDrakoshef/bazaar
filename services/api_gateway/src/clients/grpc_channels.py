@@ -8,6 +8,7 @@ class Channels:
 
     def __init__(self) -> None:
         self.auth = grpc.aio.insecure_channel(settings.auth_address)
+        self.catalog = grpc.aio.insecure_channel(settings.catalog_address)
 
     async def close(self) -> None:
         await self.auth.close()
