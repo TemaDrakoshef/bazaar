@@ -10,16 +10,16 @@ class Settings(BaseSettings):
     auth_service_host: str = "auth_service"
     auth_service_port: int = 50051
 
-    user_service_host: str = "user_service"
-    user_service_port: int = 50051
+    catalog_service_host: str = "catalog_service"
+    catalog_service_port: int = 50052
 
     @property
     def auth_address(self) -> str:
         return f"{self.auth_service_host}:{self.auth_service_port}"
 
     @property
-    def user_address(self) -> str:
-        return f"{self.user_service_host}:{self.user_service_port}"
+    def catalog_address(self) -> str:
+        return f"{self.catalog_service_host}:{self.catalog_service_port}"
 
 
 settings = Settings()
