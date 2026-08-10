@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from src.routers.v1.auth import router as auth_router
-from src.routers.v1.catalog import router as catalog_router
+from src.presentation.api.v1.auth import router as auth_router
+from src.presentation.api.v1.catalog import router as catalog_router
 
 api_router = APIRouter(prefix="/v1")
 
