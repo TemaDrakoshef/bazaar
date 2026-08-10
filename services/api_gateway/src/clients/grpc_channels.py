@@ -1,6 +1,6 @@
 import grpc.aio
 
-from src.core.settings import settings
+from src.infrastructure.config.settings import settings
 
 
 class Channels:

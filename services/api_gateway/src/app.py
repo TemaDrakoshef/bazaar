@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.clients.grpc_channels import Channels
-from src.core.settings import settings
+from src.infrastructure.config.settings import settings
 from src.routers import api_router
 
 
