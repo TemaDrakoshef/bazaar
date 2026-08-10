@@ -109,12 +109,12 @@ class Category(_message.Message):
     def __init__(self, id: _Optional[int] = ..., name: _Optional[str] = ..., path: _Optional[str] = ..., is_active: _Optional[bool] = ..., created_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., updated_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
 
 class CreateCategoryRequest(_message.Message):
-    __slots__ = ("name", "path")
+    __slots__ = ("name", "parent_id")
     NAME_FIELD_NUMBER: _ClassVar[int]
-    PATH_FIELD_NUMBER: _ClassVar[int]
+    PARENT_ID_FIELD_NUMBER: _ClassVar[int]
     name: str
-    path: str
-    def __init__(self, name: _Optional[str] = ..., path: _Optional[str] = ...) -> None: ...
+    parent_id: str
+    def __init__(self, name: _Optional[str] = ..., parent_id: _Optional[str] = ...) -> None: ...
 
 class ListCategoriesRequest(_message.Message):
     __slots__ = ()
