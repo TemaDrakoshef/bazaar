@@ -2,14 +2,15 @@
 
 Two layers are provided:
 
-* **Unit layer** (no infrastructure): a mocked :class:`AuthClient` injected into
-  the FastAPI app via dependency override, plus a ``test_client``
-  (``fastapi.testclient.TestClient``) used to exercise routes and handlers in isolation.
+* **Unit layer** (no infrastructure): mocked :class:`AbstractAuthGateway` and
+  :class:`AbstractCatalogGateway` are wired into the FastAPI app through a dishka
+  provider override (``override=True``). No real gRPC channel is ever created.
 * **Integration / e2e layer** (real ``auth_service`` + PostgreSQL): a session-scoped
   fixture that spawns the real auth-service gRPC server as a subprocess on a test port,
-  pointing it at a dedicated test database. If PostgreSQL is not reachable these
-  fixtures ``pytest.skip`` so the rest of the suite can still run (mirroring the
-  behaviour of ``auth_service`` integration tests).
+  pointing it at a dedicated test database. The gateway app is built with a dishka
+  ``Settings`` override so its auth channel targets that server. If PostgreSQL is not
+  reachable these fixtures ``pytest.skip`` so the rest of the suite can still run
+  (mirroring the behaviour of ``auth_service`` integration tests).
 """
 
 from __future__ import annotations
@@ -17,107 +18,124 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
-import types
+import uuid
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
 import grpc
 import pytest
+from dishka import Provider, Scope, provide
 from fastapi.testclient import TestClient
 
-from src.clients.auth_client import AuthClient
-from src.generated.auth.v1 import auth_pb2
+from src.domain.dtos.auth import AccessToken, AuthTokens, TokenStatus
+from src.domain.dtos.catalog import CategoryResult
+from src.domain.interfaces.auth_gateway import AbstractAuthGateway
+from src.domain.interfaces.catalog_gateway import AbstractCatalogGateway
+from src.infrastructure.config.settings import Settings
 
 AUTH_SERVICE_DIR = Path(__file__).resolve().parents[3] / "services" / "auth_service"
 TEST_DATABASE_NAME = "bazaar_auth_test"
 
 
-def make_grpc_error(
-    code: grpc.StatusCode, details: str = "test error"
-) -> grpc.aio.AioRpcError:
-    """Build an :class:`grpc.aio.AioRpcError` that the mocked client can raise."""
-    return grpc.aio.AioRpcError(
-        code,
-        initial_metadata=None,
-        trailing_metadata=None,
-        details=details,
-        debug_error_string=None,
-    )
+class MockGatewayProvider(Provider):
+    """Overrides the auth/catalog gateway ports with mocks.
+
+    Must be registered *after* ``ApiGatewayProvider`` (as ``create_app`` does)
+    so dishka can resolve ``override=True`` against the real factories.
+    """
+
+    def __init__(
+        self,
+        auth_gateway: MagicMock,
+        catalog_gateway: MagicMock,
+    ) -> None:
+        self._auth_gateway = auth_gateway
+        self._catalog_gateway = catalog_gateway
+        super().__init__()
+
+    @provide(scope=Scope.APP, override=True)
+    def provide_auth_gateway(self) -> AbstractAuthGateway:
+        return self._auth_gateway
+
+    @provide(scope=Scope.APP, override=True)
+    def provide_catalog_gateway(self) -> AbstractCatalogGateway:
+        return self._catalog_gateway
+
+
+class TestSettingsProvider(Provider):
+    """Overrides ``Settings`` so the real auth channel targets the test server."""
+
+    def __init__(self, *, auth_host: str, auth_port: int) -> None:
+        self._auth_host = auth_host
+        self._auth_port = auth_port
+        super().__init__()
+
+    @provide(scope=Scope.APP, override=True)
+    def provide_settings(self) -> Settings:
+        return Settings(
+            auth_service_host=self._auth_host, auth_service_port=self._auth_port
+        )
 
 
 def unique_email() -> str:
     """Return a collision-free email for a single test run."""
-    import uuid
-
     return f"gateway-{uuid.uuid4().hex[:12]}@example.com"
 
 
+def category_result() -> CategoryResult:
+    """A ready-to-use :class:`CategoryResult` returned by the mocked catalog."""
+    now = datetime.now(UTC)
+    return CategoryResult(
+        id=1, name="category", path="1", is_active=True, created_at=now, updated_at=now
+    )
+
+
 @pytest.fixture
-def mock_auth_client() -> MagicMock:
-    """Mock of :class:`AuthClient` with AsyncMock methods returning defaults.
+def mock_auth_gateway() -> MagicMock:
+    """Mock of :class:`AbstractAuthGateway` with AsyncMock methods returning DTOs.
 
     Individual tests can reconfigure any method via ``return_value`` or
     ``side_effect`` before exercising an endpoint.
     """
-    client = MagicMock(spec=AuthClient)
-    client.sign_up = AsyncMock(
-        return_value=auth_pb2.SignUpResponse(
+    gateway = MagicMock(spec=AbstractAuthGateway)
+    gateway.sign_up = AsyncMock(
+        return_value=AuthTokens(
             access_token="access-token", refresh_token="refresh-token"
         )
     )
-    client.login = AsyncMock(
-        return_value=auth_pb2.LoginResponse(
+    gateway.login = AsyncMock(
+        return_value=AuthTokens(
             access_token="access-token", refresh_token="refresh-token"
         )
     )
-    client.logout = AsyncMock(return_value=auth_pb2.LogoutResponse())
-    client.refresh = AsyncMock(
-        return_value=auth_pb2.RefreshResponse(access_token="access-token")
+    gateway.logout = AsyncMock(return_value=None)
+    gateway.refresh = AsyncMock(return_value=AccessToken(access_token="access-token"))
+    gateway.validate_token = AsyncMock(
+        return_value=TokenStatus(valid=True, user_id="user-123", error_message="")
     )
-    client.validate_token = AsyncMock(
-        return_value=auth_pb2.ValidateTokenResponse(
-            valid=True, user_id="user-123", error_message=""
-        )
-    )
-    return client
+    return gateway
 
 
 @pytest.fixture
-def mock_grpc_channel() -> MagicMock:
-    """A mock gRPC channel (used only when instantiating a real client)."""
-    return MagicMock()
+def mock_catalog_gateway() -> MagicMock:
+    """Mock of :class:`AbstractCatalogGateway` with AsyncMock methods returning DTOs."""
+    gateway = MagicMock(spec=AbstractCatalogGateway)
+    gateway.create_category = AsyncMock(return_value=category_result())
+    return gateway
 
 
-def _app_with_client(auth_client):
-    """Build the FastAPI app with ``get_auth_client`` overridden to ``auth_client``."""
+@pytest.fixture
+def test_client(
+    mock_auth_gateway: MagicMock, mock_catalog_gateway: MagicMock
+) -> TestClient:
+    """FastAPI TestClient wired to the mocked gateway ports through dishka."""
     from src.app import create_app
-    from src.dependencies import get_auth_client
 
-    app = create_app()
-
-    @asynccontextmanager
-    async def _noop_lifespan(app):
-        app.state.channels = types.SimpleNamespace(auth=None)
-        yield
-
-    app.router.lifespan_context = _noop_lifespan
-    app.dependency_overrides[get_auth_client] = lambda: auth_client
-    return app
-
-
-@pytest.fixture
-def test_client(mock_auth_client: MagicMock) -> TestClient:
-    """FastAPI TestClient wired to the mocked auth client.
-
-    No real gRPC channel is created (lifespan replaced), and ``get_auth_client``
-    returns the mock.
-    """
-    app = _app_with_client(mock_auth_client)
+    app = create_app(MockGatewayProvider(mock_auth_gateway, mock_catalog_gateway))
     with TestClient(app) as client:
         yield client
-    app.dependency_overrides.clear()
 
 
 def _postgres_reachable() -> bool:
@@ -168,7 +186,7 @@ from src.generated.auth.v1 import auth_pb2_grpc
 
 async def main():
     admin = create_async_engine(
-        f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}"
+        "postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}"
         f"@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/postgres",
         isolation_level="AUTOCOMMIT",
     )
@@ -249,25 +267,14 @@ asyncio.run(main())
 def integration_client(auth_service_proc: str) -> TestClient:
     """FastAPI TestClient backed by the real auth-service subprocess.
 
-    Requests flow HTTP -> gRPC -> PostgreSQL. The gRPC channel is created inside
-    the app's async ``lifespan`` so it belongs to the same event loop that runs
-    the requests (a channel created outside TestClient's loop raises
-    "Future attached to a different loop").
+    Requests flow HTTP -> gRPC -> PostgreSQL. The gRPC channel is created lazily
+    inside the request that first resolves the auth gateway, so it belongs to the
+    same event loop that runs the requests (a channel created outside TestClient's
+    loop raises "Future attached to a different loop").
     """
-    import grpc.aio
-
     from src.app import create_app
 
-    app = create_app()
-
-    @asynccontextmanager
-    async def _real_lifespan(app):
-        channel = grpc.aio.insecure_channel(auth_service_proc)
-        app.state.channels = types.SimpleNamespace(auth=channel)
-        yield
-        await channel.close()
-
-    app.router.lifespan_context = _real_lifespan
+    host, port = auth_service_proc.rsplit(":", 1)
+    app = create_app(TestSettingsProvider(auth_host=host, auth_port=int(port)))
     with TestClient(app) as client:
         yield client
-    app.dependency_overrides.clear()
