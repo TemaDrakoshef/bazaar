@@ -15,3 +15,8 @@ class ApplicationError(Exception):
 class CategoryNotFoundError(ApplicationError):
     grpc_code = StatusCode.NOT_FOUND
     message = "category not found"
+
+
+class ProductNotFoundError(ApplicationError):
+    grpc_code = StatusCode.NOT_FOUND
+    message = "product not found"
