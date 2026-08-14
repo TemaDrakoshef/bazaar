@@ -30,7 +30,11 @@ from dishka import Provider, Scope, provide
 from fastapi.testclient import TestClient
 
 from src.domain.dtos.auth import AccessToken, AuthTokens, TokenStatus
-from src.domain.dtos.catalog import CategoryResult
+from src.domain.dtos.catalog import (
+    CategoryResult,
+    ProductListResult,
+    ProductResult,
+)
 from src.domain.interfaces.auth_gateway import AbstractAuthGateway
 from src.domain.interfaces.catalog_gateway import AbstractCatalogGateway
 from src.infrastructure.config.settings import Settings
@@ -92,6 +96,22 @@ def category_result() -> CategoryResult:
     )
 
 
+def product_result() -> ProductResult:
+    """A ready-to-use :class:`ProductResult` returned by the mocked catalog."""
+    now = datetime.now(UTC)
+    return ProductResult(
+        id=1,
+        category_id=1,
+        title="product",
+        description=None,
+        price=100,
+        stock=5,
+        is_active=True,
+        created_at=now,
+        updated_at=now,
+    )
+
+
 @pytest.fixture
 def mock_auth_gateway() -> MagicMock:
     """Mock of :class:`AbstractAuthGateway` with AsyncMock methods returning DTOs.
@@ -120,9 +140,24 @@ def mock_auth_gateway() -> MagicMock:
 
 @pytest.fixture
 def mock_catalog_gateway() -> MagicMock:
-    """Mock of :class:`AbstractCatalogGateway` with AsyncMock methods returning DTOs."""
+    """Mock of :class:`AbstractCatalogGateway` with AsyncMock methods returning DTOs.
+
+    Individual tests can reconfigure any method via ``return_value`` or
+    ``side_effect`` before exercising an endpoint.
+    """
     gateway = MagicMock(spec=AbstractCatalogGateway)
     gateway.create_category = AsyncMock(return_value=category_result())
+    gateway.read_category = AsyncMock(return_value=category_result())
+    gateway.read_list_categories = AsyncMock(return_value=[category_result()])
+    gateway.update_category = AsyncMock(return_value=category_result())
+    gateway.delete_category = AsyncMock(return_value=None)
+    gateway.create_product = AsyncMock(return_value=product_result())
+    gateway.read_product = AsyncMock(return_value=product_result())
+    gateway.read_list_products = AsyncMock(
+        return_value=ProductListResult(products=[product_result()], count=1)
+    )
+    gateway.update_product = AsyncMock(return_value=product_result())
+    gateway.delete_product = AsyncMock(return_value=None)
     return gateway
 
 
