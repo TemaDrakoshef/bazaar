@@ -22,7 +22,7 @@ cd bazaar
 cp .env.example .env
 
 # Build and run all services with Docker Compose
-docker-compose up -d
+docker compose up -d
 
 # Access the application
 # Frontend: http://localhost:3000
