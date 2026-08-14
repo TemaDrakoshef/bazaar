@@ -8,15 +8,32 @@ from src.domain.dtos.auth import (
     TokenStatus,
     ValidateTokenInput,
 )
-from src.domain.dtos.catalog import CategoryCreateDTO, CategoryResult
+from src.domain.dtos.catalog import (
+    CategoryCreateDTO,
+    CategoryListQuery,
+    CategoryResult,
+    CategoryUpdateDTO,
+    ProductCreateDTO,
+    ProductListQuery,
+    ProductListResult,
+    ProductResult,
+    ProductUpdateDTO,
+)
 
 __all__ = [
     "AccessToken",
     "AuthTokens",
     "CategoryCreateDTO",
+    "CategoryListQuery",
     "CategoryResult",
+    "CategoryUpdateDTO",
     "LoginInput",
     "LogoutInput",
+    "ProductCreateDTO",
+    "ProductListQuery",
+    "ProductListResult",
+    "ProductResult",
+    "ProductUpdateDTO",
     "RefreshInput",
     "SignUpInput",
     "TokenStatus",
