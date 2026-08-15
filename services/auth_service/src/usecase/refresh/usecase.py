@@ -1,5 +1,6 @@
 import datetime
 
+import structlog
 from jose import JWTError
 
 from src.domain.exceptions import InvalidRefreshTokenError, SessionExpiredError
@@ -7,6 +8,8 @@ from src.persistence.unit_of_work import SQLAlchemyUnitOfWork
 from src.usecase.base import AuthBaseUsecase
 from src.usecase.refresh.request import RefreshRequest
 from src.usecase.refresh.response import RefreshResponse
+
+logger = structlog.get_logger()
 
 
 class RefreshUsecase(AuthBaseUsecase):
@@ -46,6 +49,11 @@ class RefreshUsecase(AuthBaseUsecase):
 
             await uow.commit()
 
+        logger.info(
+            "auth.refresh.completed",
+            user_id=str(session.user_id),
+            session_id=str(session.id),
+        )
         return RefreshResponse(
             access_token=access_token, refresh_token=new_refresh_token
         )

@@ -1,11 +1,15 @@
 import datetime
 
+import structlog
+
 from src.domain.exceptions import InvalidCredentialsError
 from src.domain.validation import validate_email, validate_password
 from src.persistence.unit_of_work import SQLAlchemyUnitOfWork
 from src.usecase.base import AuthBaseUsecase
 from src.usecase.login.request import LoginRequest
 from src.usecase.login.response import LoginResponse
+
+logger = structlog.get_logger()
 
 
 class LoginUsecase(AuthBaseUsecase):
@@ -41,4 +45,9 @@ class LoginUsecase(AuthBaseUsecase):
 
             await uow.commit()
 
+        logger.info(
+            "auth.login.completed",
+            user_id=str(user.id),
+            session_id=str(session.id),
+        )
         return LoginResponse(access_token=access_token, refresh_token=refresh_token)

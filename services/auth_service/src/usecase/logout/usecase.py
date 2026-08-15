@@ -1,10 +1,14 @@
 import datetime
 
+import structlog
+
 from src.domain.exceptions import SessionNotFoundError
 from src.persistence.unit_of_work import SQLAlchemyUnitOfWork
 from src.usecase.base import AuthBaseUsecase
 from src.usecase.logout.request import LogoutRequest
 from src.usecase.logout.response import LogoutResponse
+
+logger = structlog.get_logger()
 
 
 class LogoutUsecase(AuthBaseUsecase):
@@ -26,4 +30,5 @@ class LogoutUsecase(AuthBaseUsecase):
 
             await uow.commit()
 
+        logger.info("auth.logout.completed", session_id=str(session.id))
         return LogoutResponse()

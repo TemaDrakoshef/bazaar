@@ -1,6 +1,7 @@
 import datetime
 import uuid
 
+import structlog
 from sqlalchemy.exc import IntegrityError
 
 from src.domain.exceptions import UserAlreadyExistsError
@@ -9,6 +10,8 @@ from src.persistence.unit_of_work import SQLAlchemyUnitOfWork
 from src.usecase.base import AuthBaseUsecase
 from src.usecase.signup.request import SignUpRequest
 from src.usecase.signup.response import SignUpResponse
+
+logger = structlog.get_logger()
 
 
 class SignUpUsecase(AuthBaseUsecase):
@@ -49,4 +52,9 @@ class SignUpUsecase(AuthBaseUsecase):
 
             await uow.commit()
 
+        logger.info(
+            "auth.signup.completed",
+            account_id=str(account.id),
+            email=request.email,
+        )
         return SignUpResponse(access_token=access_token, refresh_token=refresh_token)
