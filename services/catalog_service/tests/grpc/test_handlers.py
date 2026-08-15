@@ -10,13 +10,18 @@ from src.application.use_cases.create_category import CreateCategoryUseCase
 from src.application.use_cases.create_product import CreateProductUseCase
 from src.application.use_cases.delete_category import DeleteCategoryUseCase
 from src.application.use_cases.delete_product import DeleteProductUseCase
+from src.application.use_cases.move_category import MoveCategoryUseCase
 from src.application.use_cases.read_category import ReadCategoryUseCase
 from src.application.use_cases.read_list_category import ReadListCategoriesUseCase
 from src.application.use_cases.read_list_products import ReadListProductsUseCase
 from src.application.use_cases.read_product import ReadProductUseCase
 from src.application.use_cases.update_category import UpdateCategoryUseCase
 from src.application.use_cases.update_product import UpdateProductUseCase
-from src.domain.dtos.category import CategoryCreateDTO, CategoryUpdateDTO
+from src.domain.dtos.category import (
+    CategoryCreateDTO,
+    CategoryMoveDTO,
+    CategoryUpdateDTO,
+)
 from src.domain.dtos.product import (
     ProductCreateDTO,
     ProductListQueryDTO,
@@ -116,11 +121,9 @@ class FakeCatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
     async def CreateCategory(self, request, context):
         uc = CreateCategoryUseCase(self._uow_factory())
         try:
+            parent_id = request.parent_id if request.HasField("parent_id") else None
             result = await uc(
-                CategoryCreateDTO(
-                    name=request.name,
-                    parent_id=request.parent_id,
-                )
+                CategoryCreateDTO(name=request.name, parent_id=parent_id)
             )
         except ApplicationError as exc:
             await self._abort(context, exc)
@@ -148,15 +151,21 @@ class FakeCatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
         uc = UpdateCategoryUseCase(self._uow_factory())
         try:
             name = request.name if request.HasField("name") else None
-            path = request.path if request.HasField("path") else None
             is_active = request.is_active if request.HasField("is_active") else None
             result = await uc(
                 request.category_id,
-                CategoryUpdateDTO(
-                    name=name,
-                    path=path,
-                    is_active=is_active,
-                ),
+                CategoryUpdateDTO(name=name, is_active=is_active),
+            )
+        except ApplicationError as exc:
+            await self._abort(context, exc)
+        return _to_category(result)
+
+    async def MoveCategory(self, request, context):
+        uc = MoveCategoryUseCase(self._uow_factory())
+        try:
+            parent_id = request.parent_id if request.HasField("parent_id") else None
+            result = await uc(
+                request.category_id, CategoryMoveDTO(parent_id=parent_id)
             )
         except ApplicationError as exc:
             await self._abort(context, exc)
@@ -303,3 +312,119 @@ async def test_delete_product_nonexistent_aborts_not_found(empty_stub):
         await empty_stub.DeleteProduct(catalog_pb2.ProductIdRequest(product_id=999))
     assert exc_info.value.code() == grpc.StatusCode.NOT_FOUND
     assert exc_info.value.details() == "999"
+
+
+async def test_create_root_category_via_grpc():
+    stub, stop = await _serve(lambda: FakeUnitOfWork())
+    try:
+        resp = await stub.CreateCategory(catalog_pb2.CreateCategoryRequest(name="root"))
+        assert resp.id is not None
+        assert resp.path == str(resp.id)
+        assert resp.HasField("parent_id") is False
+    finally:
+        await stop()
+
+
+async def test_create_child_via_grpc():
+    root = make_category(id_=1, path="1", parent_id=None)
+    stub, stop = await _serve(lambda: FakeUnitOfWork(categories=[root]))
+    try:
+        child = await stub.CreateCategory(
+            catalog_pb2.CreateCategoryRequest(name="child", parent_id=1)
+        )
+        assert child.path == f"1.{child.id}"
+        assert child.parent_id == 1
+    finally:
+        await stop()
+
+
+async def test_create_grandchild_via_grpc():
+    root = make_category(id_=1, path="1", parent_id=None)
+    child = make_category(id_=2, path="1.2", parent_id=1)
+    stub, stop = await _serve(lambda: FakeUnitOfWork(categories=[root, child]))
+    try:
+        grandchild = await stub.CreateCategory(
+            catalog_pb2.CreateCategoryRequest(name="grandchild", parent_id=2)
+        )
+        assert grandchild.path == f"1.2.{grandchild.id}"
+        assert grandchild.parent_id == 2
+    finally:
+        await stop()
+
+
+async def test_update_category_name_via_grpc():
+    category = make_category(id_=1, path="1", parent_id=None)
+    stub, stop = await _serve(lambda: FakeUnitOfWork(categories=[category]))
+    try:
+        resp = await stub.UpdateCategory(
+            catalog_pb2.UpdateCategoryRequest(category_id=1, name="renamed")
+        )
+        assert resp.name == "renamed"
+    finally:
+        await stop()
+
+
+async def test_move_category_via_grpc():
+    tree = [
+        make_category(id_=1, path="1", parent_id=None),
+        make_category(id_=7, path="7", parent_id=None),
+        make_category(id_=2, path="1.2", parent_id=1),
+        make_category(id_=3, path="1.2.3", parent_id=2),
+        make_category(id_=4, path="1.2.4", parent_id=2),
+    ]
+    stub, stop = await _serve(lambda: FakeUnitOfWork(categories=list(tree)))
+    try:
+        resp = await stub.MoveCategory(
+            catalog_pb2.MoveCategoryRequest(category_id=2, parent_id=7)
+        )
+        assert resp.path == "7.2"
+        assert resp.parent_id == 7
+    finally:
+        await stop()
+
+
+async def test_move_category_into_descendant_rejected_via_grpc():
+    tree = [
+        make_category(id_=1, path="1", parent_id=None),
+        make_category(id_=2, path="1.2", parent_id=1),
+        make_category(id_=3, path="1.2.3", parent_id=2),
+    ]
+    stub, stop = await _serve(lambda: FakeUnitOfWork(categories=list(tree)))
+    try:
+        with pytest.raises(grpc.aio.AioRpcError) as exc_info:
+            await stub.MoveCategory(
+                catalog_pb2.MoveCategoryRequest(category_id=1, parent_id=3)
+            )
+        assert exc_info.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+    finally:
+        await stop()
+
+
+async def test_delete_category_with_children_rejected_via_grpc():
+    tree = [
+        make_category(id_=1, path="1", parent_id=None),
+        make_category(id_=2, path="1.2", parent_id=1),
+    ]
+    stub, stop = await _serve(lambda: FakeUnitOfWork(categories=list(tree)))
+    try:
+        with pytest.raises(grpc.aio.AioRpcError) as exc_info:
+            await stub.DeleteCategory(catalog_pb2.CategoryIdRequest(category_id=1))
+        assert exc_info.value.code() == grpc.StatusCode.ALREADY_EXISTS
+        assert exc_info.value.details() == "category has children"
+    finally:
+        await stop()
+
+
+async def test_delete_category_with_products_rejected_via_grpc():
+    category = make_category(id_=1, path="1", parent_id=None)
+    product = make_product(id_=1, category_id=1)
+    stub, stop = await _serve(
+        lambda: FakeUnitOfWork(categories=[category], products=[product])
+    )
+    try:
+        with pytest.raises(grpc.aio.AioRpcError) as exc_info:
+            await stub.DeleteCategory(catalog_pb2.CategoryIdRequest(category_id=1))
+        assert exc_info.value.code() == grpc.StatusCode.ALREADY_EXISTS
+        assert exc_info.value.details() == "category has products"
+    finally:
+        await stop()

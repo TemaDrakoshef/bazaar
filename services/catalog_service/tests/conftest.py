@@ -17,6 +17,19 @@ class FakeProductRepo:
                 return record
         return None
 
+    async def get_all_by_filter(self, **filters):
+        return [
+            record
+            for record in self.records
+            if all(
+                getattr(record, key, None) == value
+                for key, value in filters.items()
+            )
+        ]
+
+    async def count(self, **filters) -> int:
+        return len(await self.get_all_by_filter(**filters))
+
     async def delete(self, id_: int):
         for i, record in enumerate(self.records):
             if record.id == id_:
@@ -47,10 +60,54 @@ class FakeCategoryRepo:
                 return record
         return None
 
+    async def get_all_by_filter(self, **filters):
+        return [
+            record
+            for record in self.records
+            if all(
+                getattr(record, key, None) == value
+                for key, value in filters.items()
+            )
+        ]
+
+    async def count(self, **filters) -> int:
+        return len(await self.get_all_by_filter(**filters))
+
+    async def get_descendants(self, path: str):
+        return [
+            record
+            for record in self.records
+            if str(record.path) == path or str(record.path).startswith(f"{path}.")
+        ]
+
     async def create(self, **values):
+        if "id" not in values or values["id"] is None:
+            values["id"] = max((r.id for r in self.records), default=0) + 1
+        if "is_active" not in values:
+            values["is_active"] = True
+        if "created_at" not in values:
+            import datetime
+
+            values["created_at"] = datetime.datetime.now(datetime.UTC)
+        if "updated_at" not in values:
+            values["updated_at"] = values["created_at"]
         record = types.SimpleNamespace(**values)
         self.records.append(record)
         return record
+
+    async def update(self, id_: int, **values):
+        for record in self.records:
+            if record.id == id_:
+                for key, value in values.items():
+                    setattr(record, key, value)
+                return record
+        return None
+
+    async def delete(self, id_: int):
+        for i, record in enumerate(self.records):
+            if record.id == id_:
+                return self.records.pop(i)
+        return None
 
 
 class FakeUnitOfWork:
@@ -106,6 +163,7 @@ def make_category(
     id_: int = 1,
     name: str = "category",
     path: str = "1",
+    parent_id: int | None = None,
     is_active: bool = True,
     created_at=None,
     updated_at=None,
@@ -117,6 +175,7 @@ def make_category(
         id=id_,
         name=name,
         path=path,
+        parent_id=parent_id,
         is_active=is_active,
         created_at=now,
         updated_at=updated_at or now,
