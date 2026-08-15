@@ -16,6 +16,7 @@ dependencies = [
     "pydantic[email]>=2.13.4",
     "python-jose[cryptography]>=3.5.0",
     "sqlalchemy>=2.0.51",
+    "structlog>=26.1.0",
 ]
 
 [tool.uv]
