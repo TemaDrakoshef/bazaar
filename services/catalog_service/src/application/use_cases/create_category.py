@@ -21,22 +21,27 @@ class CreateCategoryUseCase:
                 path=Ltree("temp"),
             )
 
-            if not data.parent_id:
-                new_path = Ltree(str(new_category.id))
-            else:
+            if data.parent_id is not None:
                 parent_category = await uow.category.get_by_id(data.parent_id)
                 if not parent_category:
                     raise CategoryNotFoundError(str(data.parent_id))
 
                 new_path = Ltree(f"{parent_category.path}.{new_category.id}")
+                new_parent_id = data.parent_id
+            else:
+                new_path = Ltree(str(new_category.id))
+                new_parent_id = None
 
-            await uow.category.update(new_category.id, path=new_path)
+            await uow.category.update(
+                new_category.id, path=new_path, parent_id=new_parent_id
+            )
             await uow.commit()
 
             refreshed = await uow.category.get_by_id(new_category.id)
             response = Category(
                 id=refreshed.id,
                 name=refreshed.name,
+                parent_id=refreshed.parent_id,
                 path=str(refreshed.path),
                 is_active=refreshed.is_active,
                 created_at=refreshed.created_at,
@@ -47,6 +52,7 @@ class CreateCategoryUseCase:
             "category.created",
             category_id=response.id,
             name=response.name,
+            parent_id=response.parent_id,
             path=response.path,
         )
         return response

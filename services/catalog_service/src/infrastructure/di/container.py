@@ -12,6 +12,7 @@ from src.application.use_cases.create_category import CreateCategoryUseCase
 from src.application.use_cases.create_product import CreateProductUseCase
 from src.application.use_cases.delete_category import DeleteCategoryUseCase
 from src.application.use_cases.delete_product import DeleteProductUseCase
+from src.application.use_cases.move_category import MoveCategoryUseCase
 from src.application.use_cases.read_category import (
     ReadCategoryUseCase,
 )
@@ -100,3 +101,7 @@ class CatalogProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def provide_delete_category(self, uow: AbstractUnitOfWork) -> DeleteCategoryUseCase:
         return DeleteCategoryUseCase(uow)
+
+    @provide(scope=Scope.REQUEST)
+    def provide_move_category(self, uow: AbstractUnitOfWork) -> MoveCategoryUseCase:
+        return MoveCategoryUseCase(uow)

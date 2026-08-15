@@ -15,6 +15,7 @@ class ReadCategoryUseCase:
             return Category(
                 id=category.id,
                 name=category.name,
+                parent_id=category.parent_id,
                 path=str(category.path),
                 is_active=category.is_active,
                 created_at=category.created_at,

@@ -15,6 +15,7 @@ from src.application.use_cases.create_category import (
 from src.application.use_cases.create_product import CreateProductUseCase
 from src.application.use_cases.delete_category import DeleteCategoryUseCase
 from src.application.use_cases.delete_product import DeleteProductUseCase
+from src.application.use_cases.move_category import MoveCategoryUseCase
 from src.application.use_cases.read_category import (
     ReadCategoryUseCase,
 )
@@ -25,7 +26,11 @@ from src.application.use_cases.read_list_products import ReadListProductsUseCase
 from src.application.use_cases.read_product import ReadProductUseCase
 from src.application.use_cases.update_category import UpdateCategoryUseCase
 from src.application.use_cases.update_product import UpdateProductUseCase
-from src.domain.dtos.category import CategoryCreateDTO, CategoryUpdateDTO
+from src.domain.dtos.category import (
+    CategoryCreateDTO,
+    CategoryMoveDTO,
+    CategoryUpdateDTO,
+)
 from src.domain.dtos.product import (
     ProductCreateDTO,
     ProductListQueryDTO,
@@ -46,7 +51,7 @@ def _to_timestamp(value: datetime) -> Timestamp:
 
 
 def _to_category(category: Category) -> catalog_pb2.Category:
-    return catalog_pb2.Category(
+    result = catalog_pb2.Category(
         id=category.id,
         name=category.name,
         path=category.path,
@@ -54,6 +59,9 @@ def _to_category(category: Category) -> catalog_pb2.Category:
         created_at=_to_timestamp(category.created_at),
         updated_at=_to_timestamp(category.updated_at),
     )
+    if category.parent_id is not None:
+        result.parent_id = category.parent_id
+    return result
 
 
 def _to_product(product: Product) -> catalog_pb2.Product:
@@ -211,11 +219,9 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
     ) -> catalog_pb2.Category:
         with _request_context(parent_id=request.parent_id):
             try:
+                parent_id = request.parent_id if request.HasField("parent_id") else None
                 result = await create_category(
-                    CategoryCreateDTO(
-                        name=request.name,
-                        parent_id=request.parent_id,
-                    )
+                    CategoryCreateDTO(name=request.name, parent_id=parent_id),
                 )
             except ApplicationError as exc:
                 await _abort(context, exc)
@@ -263,15 +269,10 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
         with _request_context(category_id=request.category_id):
             try:
                 name = request.name if request.HasField("name") else None
-                path = request.path if request.HasField("path") else None
                 is_active = request.is_active if request.HasField("is_active") else None
                 result = await update_category(
                     request.category_id,
-                    CategoryUpdateDTO(
-                        name=name,
-                        path=path,
-                        is_active=is_active,
-                    ),
+                    CategoryUpdateDTO(name=name, is_active=is_active),
                 )
             except ApplicationError as exc:
                 await _abort(context, exc)
@@ -292,3 +293,24 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
                 await _abort(context, exc)
 
             return Empty()
+
+    @inject
+    async def MoveCategory(
+        self,
+        request: catalog_pb2.MoveCategoryRequest,
+        context: ServicerContext,
+        move_category: FromDishka[MoveCategoryUseCase],
+    ) -> catalog_pb2.Category:
+        with _request_context(
+            category_id=request.category_id, parent_id=request.parent_id
+        ):
+            try:
+                parent_id = request.parent_id if request.HasField("parent_id") else None
+                result = await move_category(
+                    request.category_id,
+                    CategoryMoveDTO(parent_id=parent_id),
+                )
+            except ApplicationError as exc:
+                await _abort(context, exc)
+
+            return _to_category(result)

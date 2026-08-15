@@ -1,5 +1,4 @@
 import structlog
-from sqlalchemy_utils import Ltree
 
 from src.domain.dtos.category import CategoryUpdateDTO
 from src.domain.entities.category import Category
@@ -20,8 +19,6 @@ class UpdateCategoryUseCase:
                 raise CategoryNotFoundError(str(category_id))
 
             values = data.model_dump(exclude_none=True)
-            if "path" in values:
-                values["path"] = Ltree(values["path"])
 
             if not values:
                 await uow.commit()
@@ -31,6 +28,7 @@ class UpdateCategoryUseCase:
                 return Category(
                     id=existing.id,
                     name=existing.name,
+                    parent_id=existing.parent_id,
                     path=str(existing.path),
                     is_active=existing.is_active,
                     created_at=existing.created_at,
@@ -44,6 +42,7 @@ class UpdateCategoryUseCase:
             result = Category(
                 id=refreshed.id,
                 name=refreshed.name,
+                parent_id=refreshed.parent_id,
                 path=str(refreshed.path),
                 is_active=refreshed.is_active,
                 created_at=refreshed.created_at,
