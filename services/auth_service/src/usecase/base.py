@@ -3,7 +3,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 import bcrypt
-from jose import jwt
+from jose import JWTError, jwt
 
 from src.core.settings import settings
 
@@ -78,5 +78,5 @@ class AuthBaseUsecase:
             issuer=settings.JWT_ISSUER,
         )
         if expected_type is not None and payload.get("type") != expected_type:
-            raise jwt.JWTError("token type mismatch")
+            raise JWTError("token type mismatch")
         return payload

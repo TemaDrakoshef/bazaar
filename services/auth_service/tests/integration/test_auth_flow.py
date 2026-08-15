@@ -229,6 +229,18 @@ async def test_refresh_after_logout_raises(integration_session_maker):
         )
 
 
+async def test_refresh_with_access_token_raises_invalid_refresh_token(
+    integration_session_maker,
+):
+    uow = SQLAlchemyUnitOfWork(integration_session_maker)
+    access_token, _ = await _create_user(uow)
+
+    with pytest.raises(InvalidRefreshTokenError):
+        await RefreshUsecase(uow=uow).execute(
+            RefreshRequest(refresh_token=access_token)
+        )
+
+
 async def test_access_token_invalid_after_logout(integration_session_maker):
     uow = SQLAlchemyUnitOfWork(integration_session_maker)
     access_token, _ = await _create_user(uow)
