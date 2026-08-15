@@ -2,6 +2,7 @@ include:
   - services/auth_service/docker-compose.yml
   - services/api_gateway/docker-compose.yml
   - services/catalog_service/docker-compose.yml
+  - infrastructure/docker/compose/docker-compose.yml
 
 networks:
   app-network:

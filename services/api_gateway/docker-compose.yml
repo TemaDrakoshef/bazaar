@@ -7,7 +7,9 @@ services:
     ports:
       - "8000:8000"
     depends_on:
+      - otel-collector
       - auth_service
+      - catalog_service
     networks:
       - app-network
 

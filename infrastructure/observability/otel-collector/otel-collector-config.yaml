@@ -1,0 +1,58 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  memory_limiter:
+    check_interval: 5s
+    limit_percentage: 80
+    spike_limit_percentage: 25
+  resourcedetection:
+    detectors: [env, system]
+    timeout: 5s
+  resource:
+    attributes:
+      - key: deployment.environment.name
+        value: ${env:OTEL_DEPLOYMENT_ENVIRONMENT:-local}
+        action: upsert
+  batch:
+    send_batch_size: 1024
+    timeout: 5s
+
+exporters:
+  debug:
+    verbosity: basic
+    sampling_initial: 3
+    sampling_thereafter: 1
+  # otlp/tempo:
+  #   endpoint: tempo:4317
+  #   tls:
+  #     insecure: true
+  prometheus:
+    endpoint: 0.0.0.0:8889
+    namespace: bazaar
+    resource_to_telemetry_conversion:
+      enabled: true
+  # otlphttp/loki:
+  #   endpoint: http://loki:3100/otlp
+  #   tls:
+  #     insecure: true
+
+service:
+  pipelines:
+    # traces:
+    #   receivers: [otlp]
+    #   processors: [memory_limiter, resourcedetection, resource, batch]
+    #   exporters: [otlp/tempo, debug]
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, resourcedetection, resource, batch]
+      exporters: [prometheus]
+    # logs:
+    #   receivers: [otlp]
+    #   processors: [memory_limiter, resourcedetection, resource, batch]
+    #   exporters: [otlphttp/loki, debug]

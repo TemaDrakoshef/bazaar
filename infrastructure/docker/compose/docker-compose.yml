@@ -1,0 +1,61 @@
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  prometheus-data:
+    #   loki-data:
+    #   tempo-data:
+    #   grafana-data:
+    #   alertmanager-data:
+
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.158.0
+    container_name: bazaar-otel-collector
+    command: [ "--config=/etc/otelcol/config.yaml" ]
+    environment:
+      OTEL_DEPLOYMENT_ENVIRONMENT: ${DEPLOYMENT_ENVIRONMENT:-local}
+    volumes:
+      - ../../observability/otel-collector/otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "${OTEL_COLLECTOR_OTLP_GRPC_PORT:-4317}:4317" # OTLP/gRPC
+      - "${OTEL_COLLECTOR_OTLP_HTTP_PORT:-4318}:4318" # OTLP/HTTP
+      - "${OTEL_COLLECTOR_METRICS_PORT:-8889}:8889" # Prometheus scrape endpoint
+      - "13133:13133" # healthz
+      # depends_on:
+      # tempo:
+      #   condition: service_started
+      # loki:
+      #   condition: service_started
+    networks:
+      - app-network
+
+  prometheus:
+    image: prom/prometheus:v3.13.2
+    container_name: bazaar-prometheus
+    environment:
+      DEPLOYMENT_ENVIRONMENT: ${DEPLOYMENT_ENVIRONMENT:-local}
+      CLUSTER_NAME: ${CLUSTER_NAME:-bazaar-local}
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=${PROM_RETENTION:-15d}"
+      - "--web.enable-lifecycle"
+    volumes:
+      - ../../observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../../observability/prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    # depends_on:
+    #   alertmanager:
+    #     condition: service_started
+    networks:
+      - app-network
