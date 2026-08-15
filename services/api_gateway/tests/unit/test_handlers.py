@@ -53,7 +53,9 @@ def test_refresh_success_returns_200(test_client, mock_auth_gateway):
         "/api/v1/auth/refresh", json={"refresh_token": "a-valid-refresh-token"}
     )
     assert resp.status_code == 200
-    assert resp.json() == {"access_token": "access-token"}
+    body = resp.json()
+    assert body["access_token"] == "access-token"
+    assert body["refresh_token"] == "refresh-token"
     mock_auth_gateway.refresh.assert_awaited_once()
 
 

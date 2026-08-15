@@ -29,7 +29,7 @@ import pytest
 from dishka import Provider, Scope, provide
 from fastapi.testclient import TestClient
 
-from src.domain.dtos.auth import AccessToken, AuthTokens, TokenStatus
+from src.domain.dtos.auth import AuthTokens, TokenStatus
 from src.domain.dtos.catalog import (
     CategoryResult,
     ProductListResult,
@@ -131,7 +131,11 @@ def mock_auth_gateway() -> MagicMock:
         )
     )
     gateway.logout = AsyncMock(return_value=None)
-    gateway.refresh = AsyncMock(return_value=AccessToken(access_token="access-token"))
+    gateway.refresh = AsyncMock(
+        return_value=AuthTokens(
+            access_token="access-token", refresh_token="refresh-token"
+        )
+    )
     gateway.validate_token = AsyncMock(
         return_value=TokenStatus(valid=True, user_id="user-123", error_message="")
     )

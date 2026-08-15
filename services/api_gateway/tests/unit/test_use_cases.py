@@ -82,6 +82,7 @@ async def test_refresh_use_case_delegates_to_gateway(mock_auth_gateway):
     result = await RefreshUseCase(mock_auth_gateway).execute(REFRESH_INPUT)
 
     assert result.access_token == "access-token"
+    assert result.refresh_token == "refresh-token"
     mock_auth_gateway.refresh.assert_awaited_once_with(REFRESH_INPUT)
 
 

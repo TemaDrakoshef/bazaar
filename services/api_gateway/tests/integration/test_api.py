@@ -114,6 +114,8 @@ def test_refresh_rotates_and_rejects_replay(integration_client):
     assert first.status_code == 200
     assert first.json()["access_token"]
     assert first.json()["access_token"] != login["access_token"]
+    assert first.json()["refresh_token"]
+    assert first.json()["refresh_token"] != old_refresh
 
     replay = integration_client.post(
         "/api/v1/auth/refresh", json={"refresh_token": old_refresh}

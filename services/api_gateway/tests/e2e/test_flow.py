@@ -66,6 +66,62 @@ def test_full_lifecycle_signup_login_refresh_logout(integration_client):
     assert logout.status_code == 204
 
 
+def test_refresh_rotation_chain_continues_and_rejects_replay(integration_client):
+    """A correct refresh-token rotation chain can be continued indefinitely.
+
+    login -> refresh A -> access B + refresh B
+    refresh B -> access C + refresh C
+    refresh A (replay) -> 401
+    """
+    email = unique_email()
+    integration_client.post(
+        "/api/v1/auth/signup",
+        json={"email": email, "phone": PHONE, "password": PASSWORD},
+    )
+
+    login = integration_client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": PASSWORD},
+    )
+    assert login.status_code == 200
+    access_a = login.json()["access_token"]
+    refresh_a = login.json()["refresh_token"]
+    assert _decode(access_a)["type"] == "access"
+    assert _decode(refresh_a)["type"] == "refresh"
+
+    first = integration_client.post(
+        "/api/v1/auth/refresh", json={"refresh_token": refresh_a}
+    )
+    assert first.status_code == 200
+    access_b = first.json()["access_token"]
+    refresh_b = first.json()["refresh_token"]
+    assert access_b != access_a
+    assert refresh_b != refresh_a
+    assert _decode(access_b)["type"] == "access"
+    assert _decode(refresh_b)["type"] == "refresh"
+
+    second = integration_client.post(
+        "/api/v1/auth/refresh", json={"refresh_token": refresh_b}
+    )
+    assert second.status_code == 200
+    access_c = second.json()["access_token"]
+    refresh_c = second.json()["refresh_token"]
+    assert access_c != access_b
+    assert refresh_c != refresh_b
+
+    third = integration_client.post(
+        "/api/v1/auth/refresh", json={"refresh_token": refresh_c}
+    )
+    assert third.status_code == 200
+    assert third.json()["access_token"] != access_c
+    assert third.json()["refresh_token"] != refresh_c
+
+    replay = integration_client.post(
+        "/api/v1/auth/refresh", json={"refresh_token": refresh_a}
+    )
+    assert replay.status_code == 401
+
+
 def test_access_token_invalid_after_logout(integration_client):
     email = unique_email()
     signup = integration_client.post(
