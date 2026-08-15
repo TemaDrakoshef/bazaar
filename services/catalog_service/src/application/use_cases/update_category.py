@@ -1,9 +1,12 @@
+import structlog
 from sqlalchemy_utils import Ltree
 
 from src.domain.dtos.category import CategoryUpdateDTO
 from src.domain.entities.category import Category
 from src.domain.exceptions import CategoryNotFoundError
 from src.domain.interfaces.unit_of_work import AbstractUnitOfWork
+
+logger = structlog.get_logger()
 
 
 class UpdateCategoryUseCase:
@@ -22,6 +25,9 @@ class UpdateCategoryUseCase:
 
             if not values:
                 await uow.commit()
+                logger.info(
+                    "category.updated", category_id=category_id, no_changes=True
+                )
                 return Category(
                     id=existing.id,
                     name=existing.name,
@@ -35,7 +41,7 @@ class UpdateCategoryUseCase:
             await uow.commit()
 
             refreshed = await uow.category.get_by_id(category_id)
-            return Category(
+            result = Category(
                 id=refreshed.id,
                 name=refreshed.name,
                 path=str(refreshed.path),
@@ -43,3 +49,6 @@ class UpdateCategoryUseCase:
                 created_at=refreshed.created_at,
                 updated_at=refreshed.updated_at,
             )
+
+        logger.info("category.updated", category_id=result.id, fields=list(values))
+        return result

@@ -1,5 +1,9 @@
+import structlog
+
 from src.domain.exceptions import CategoryNotFoundError
 from src.domain.interfaces.unit_of_work import AbstractUnitOfWork
+
+logger = structlog.get_logger()
 
 
 class DeleteCategoryUseCase:
@@ -14,3 +18,5 @@ class DeleteCategoryUseCase:
 
             await uow.category.delete(category_id)
             await uow.commit()
+
+        logger.info("category.deleted", category_id=category_id)

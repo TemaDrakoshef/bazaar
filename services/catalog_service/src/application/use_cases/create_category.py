@@ -1,10 +1,12 @@
+import structlog
 from sqlalchemy_utils import Ltree
 
 from src.domain.dtos.category import CategoryCreateDTO
 from src.domain.entities.category import Category
 from src.domain.exceptions import CategoryNotFoundError
 from src.domain.interfaces.unit_of_work import AbstractUnitOfWork
-from src.infrastructure.database.unit_of_work import SQLAlchemyUnitOfWork
+
+logger = structlog.get_logger()
 
 
 class CreateCategoryUseCase:
@@ -14,8 +16,6 @@ class CreateCategoryUseCase:
     async def __call__(self, data: CategoryCreateDTO) -> Category:
         """Create a new category."""
         async with self._uow as uow:
-            uow: SQLAlchemyUnitOfWork
-
             new_category = await uow.category.create(
                 name=data.name,
                 path=Ltree("temp"),
@@ -43,4 +43,10 @@ class CreateCategoryUseCase:
                 updated_at=refreshed.updated_at,
             )
 
+        logger.info(
+            "category.created",
+            category_id=response.id,
+            name=response.name,
+            path=response.path,
+        )
         return response

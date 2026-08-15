@@ -1,7 +1,11 @@
+import structlog
+
 from src.domain.dtos.product import ProductCreateDTO
 from src.domain.entities.product import Product
 from src.domain.exceptions import CategoryNotFoundError
 from src.domain.interfaces.unit_of_work import AbstractUnitOfWork
+
+logger = structlog.get_logger()
 
 
 class CreateProductUseCase:
@@ -22,4 +26,10 @@ class CreateProductUseCase:
             refreshed = await uow.product.get_by_id(product.id)
             response = Product.model_validate(refreshed)
 
+        logger.info(
+            "product.created",
+            product_id=response.id,
+            category_id=response.category_id,
+            title=response.title,
+        )
         return response

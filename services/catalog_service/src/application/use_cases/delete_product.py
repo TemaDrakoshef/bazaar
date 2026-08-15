@@ -1,5 +1,9 @@
+import structlog
+
 from src.domain.exceptions import ProductNotFoundError
 from src.domain.interfaces.unit_of_work import AbstractUnitOfWork
+
+logger = structlog.get_logger()
 
 
 class DeleteProductUseCase:
@@ -14,3 +18,5 @@ class DeleteProductUseCase:
 
             await uow.product.delete(product_id)
             await uow.commit()
+
+        logger.info("product.deleted", product_id=product_id)
