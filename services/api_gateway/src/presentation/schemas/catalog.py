@@ -40,6 +40,7 @@ class ProductListResponse(BaseModel):
 class CategoryResponse(BaseModel):
     id: int
     name: str
+    parent_id: int | None = None
     path: str
     is_active: bool
     created_at: datetime
@@ -53,5 +54,8 @@ class CategoryCreateRequest(BaseModel):
 
 class CategoryUpdateRequest(BaseModel):
     name: str | None = None
-    path: str | None = None
     is_active: bool | None = None
+
+
+class CategoryMoveRequest(BaseModel):
+    parent_id: int | None = None

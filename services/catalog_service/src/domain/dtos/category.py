@@ -8,8 +8,11 @@ class CategoryCreateDTO(CustomModel):
 
 class CategoryUpdateDTO(CustomModel):
     name: str | None = None
-    path: str | None = None
     is_active: bool | None = None
+
+
+class CategoryMoveDTO(CustomModel):
+    parent_id: int | None = None
 
 
 class CategoryIdRequestDTO(CustomModel):

@@ -10,13 +10,17 @@ class CategoryCreateDTO(BaseModel):
 
 class CategoryUpdateDTO(BaseModel):
     name: str | None = None
-    path: str | None = None
     is_active: bool | None = None
+
+
+class CategoryMoveDTO(BaseModel):
+    parent_id: int | None = None
 
 
 class CategoryResult(BaseModel):
     id: int
     name: str
+    parent_id: int | None = None
     path: str
     is_active: bool
     created_at: datetime

@@ -10,6 +10,7 @@ from src.domain.dtos.auth import (
 from src.domain.dtos.catalog import (
     CategoryCreateDTO,
     CategoryListQuery,
+    CategoryMoveDTO,
     CategoryResult,
     CategoryUpdateDTO,
     ProductCreateDTO,
@@ -23,6 +24,7 @@ __all__ = [
     "AuthTokens",
     "CategoryCreateDTO",
     "CategoryListQuery",
+    "CategoryMoveDTO",
     "CategoryResult",
     "CategoryUpdateDTO",
     "LoginInput",

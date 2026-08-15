@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from src.domain.dtos.catalog import (
     CategoryCreateDTO,
     CategoryListQuery,
+    CategoryMoveDTO,
     CategoryResult,
     CategoryUpdateDTO,
     ProductCreateDTO,
@@ -34,6 +35,11 @@ class AbstractCatalogGateway(ABC):
 
     @abstractmethod
     async def delete_category(self, category_id: int) -> None: ...
+
+    @abstractmethod
+    async def move_category(
+        self, category_id: int, data: CategoryMoveDTO
+    ) -> CategoryResult: ...
 
     @abstractmethod
     async def create_product(self, data: ProductCreateDTO) -> ProductResult: ...

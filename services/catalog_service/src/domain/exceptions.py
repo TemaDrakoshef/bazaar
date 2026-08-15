@@ -20,3 +20,18 @@ class CategoryNotFoundError(ApplicationError):
 class ProductNotFoundError(ApplicationError):
     grpc_code = StatusCode.NOT_FOUND
     message = "product not found"
+
+
+class CategoryHasChildrenError(ApplicationError):
+    grpc_code = StatusCode.ALREADY_EXISTS
+    message = "category has children"
+
+
+class CategoryHasProductsError(ApplicationError):
+    grpc_code = StatusCode.ALREADY_EXISTS
+    message = "category has products"
+
+
+class CategoryMoveError(ApplicationError):
+    grpc_code = StatusCode.INVALID_ARGUMENT
+    message = "cannot move category into itself or its descendant"
