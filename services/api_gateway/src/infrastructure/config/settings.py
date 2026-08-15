@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     catalog_service_host: str = "catalog_service"
     catalog_service_port: int = 50052
 
+    LOG_LEVEL: str = "INFO"
+    ENVIRONMENT: str = "dev"
+
     @property
     def auth_address(self) -> str:
         return f"{self.auth_service_host}:{self.auth_service_port}"
