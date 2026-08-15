@@ -29,10 +29,6 @@ class AuthTokens(BaseModel):
     refresh_token: str
 
 
-class AccessToken(BaseModel):
-    access_token: str
-
-
 class TokenStatus(BaseModel):
     valid: bool
     user_id: str | None = None

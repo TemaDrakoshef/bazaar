@@ -1,7 +1,6 @@
 import grpc.aio
 
 from src.domain.dtos.auth import (
-    AccessToken,
     AuthTokens,
     LoginInput,
     LogoutInput,
@@ -55,7 +54,7 @@ class AuthClient(AbstractAuthGateway):
             except grpc.aio.AioRpcError as exc:
                 raise translate_grpc_error(exc) from exc
 
-    async def refresh(self, data: RefreshInput) -> AccessToken:
+    async def refresh(self, data: RefreshInput) -> AuthTokens:
         async with track_grpc_call("auth", "Refresh"):
             try:
                 response = await self._stub.Refresh(
@@ -63,7 +62,9 @@ class AuthClient(AbstractAuthGateway):
                 )
             except grpc.aio.AioRpcError as exc:
                 raise translate_grpc_error(exc) from exc
-        return AccessToken(access_token=response.access_token)
+        return AuthTokens(
+            access_token=response.access_token, refresh_token=response.refresh_token
+        )
 
     async def validate_token(self, data: ValidateTokenInput) -> TokenStatus:
         async with track_grpc_call("auth", "ValidateToken"):

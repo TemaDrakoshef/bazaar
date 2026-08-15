@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 
 from src.domain.dtos.auth import (
-    AccessToken,
     AuthTokens,
     LoginInput,
     LogoutInput,
@@ -25,7 +24,7 @@ class AbstractAuthGateway(ABC):
     async def logout(self, data: LogoutInput) -> None: ...
 
     @abstractmethod
-    async def refresh(self, data: RefreshInput) -> AccessToken: ...
+    async def refresh(self, data: RefreshInput) -> AuthTokens: ...
 
     @abstractmethod
     async def validate_token(self, data: ValidateTokenInput) -> TokenStatus: ...

@@ -1,5 +1,4 @@
 from src.domain.dtos.auth import (
-    AccessToken,
     AuthTokens,
     LoginInput,
     LogoutInput,
@@ -21,7 +20,6 @@ from src.domain.dtos.catalog import (
 )
 
 __all__ = [
-    "AccessToken",
     "AuthTokens",
     "CategoryCreateDTO",
     "CategoryListQuery",
