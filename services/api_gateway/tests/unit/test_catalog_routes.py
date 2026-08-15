@@ -7,7 +7,7 @@ from src.domain.dtos.catalog import (
     ProductListResult,
     ProductResult,
 )
-from src.domain.exceptions import NotFoundError
+from src.domain.exceptions import ConflictError, NotFoundError
 from tests.conftest import category_result, product_result
 
 pytestmark = pytest.mark.unit
@@ -164,3 +164,25 @@ def test_delete_product_missing_maps_to_404(test_client, mock_catalog_gateway):
     resp = test_client.delete("/api/v1/catalog/product/999")
 
     assert resp.status_code == 404
+
+
+def test_delete_category_with_children_maps_to_409(test_client, mock_catalog_gateway):
+    mock_catalog_gateway.delete_category.side_effect = ConflictError(
+        "category has children"
+    )
+
+    resp = test_client.delete("/api/v1/catalog/category/1")
+
+    assert resp.status_code == 409
+
+
+def test_move_category_returns_mapped_response(test_client, mock_catalog_gateway):
+    mock_catalog_gateway.move_category.return_value = _category()
+
+    resp = test_client.patch(
+        "/api/v1/catalog/category/1/move", json={"parent_id": 7}
+    )
+
+    assert resp.status_code == 200
+    assert resp.json()["id"] == 1
+    mock_catalog_gateway.move_category.assert_awaited_once()
