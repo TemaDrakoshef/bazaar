@@ -80,7 +80,7 @@ def _request_context(**context: object) -> Iterator[None]:
         clear_contextvars()
 
 
-def _abort(context: ServicerContext, exc: ApplicationError) -> None:
+async def _abort(context: ServicerContext, exc: ApplicationError) -> None:
     """Log a domain error and abort the RPC with its gRPC status."""
     logger.warning(
         "catalog.request_failed",
@@ -88,7 +88,7 @@ def _abort(context: ServicerContext, exc: ApplicationError) -> None:
         grpc_code=exc.grpc_code.name,
         detail=exc.detail,
     )
-    context.abort(exc.grpc_code, exc.detail)
+    await context.abort(exc.grpc_code, exc.detail)
 
 
 class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):  # type: ignore[misc]
@@ -111,7 +111,7 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):  # type: i
                     )
                 )
             except ApplicationError as exc:
-                _abort(context, exc)
+                await _abort(context, exc)
 
             return _to_product(result)
 
@@ -126,7 +126,7 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):  # type: i
             try:
                 result = await read_product(request.product_id)
             except ApplicationError as exc:
-                _abort(context, exc)
+                await _abort(context, exc)
 
             return _to_product(result)
 
@@ -143,7 +143,7 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):  # type: i
                     ProductListQueryDTO(limit=request.limit, offset=request.offset)
                 )
             except ApplicationError as exc:
-                _abort(context, exc)
+                await _abort(context, exc)
 
             return catalog_pb2.ListProductsResponse(
                 products=[_to_product(product) for product in products], count=count
@@ -170,7 +170,7 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):  # type: i
                     ),
                 )
             except ApplicationError as exc:
-                _abort(context, exc)
+                await _abort(context, exc)
 
             return _to_product(result)
 
@@ -185,7 +185,7 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):  # type: i
             try:
                 await delete_product(request.product_id)
             except ApplicationError as exc:
-                _abort(context, exc)
+                await _abort(context, exc)
 
             return Empty()
 
@@ -205,7 +205,7 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):  # type: i
                     )
                 )
             except ApplicationError as exc:
-                _abort(context, exc)
+                await _abort(context, exc)
 
             return _to_category(result)
 
@@ -220,7 +220,7 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):  # type: i
             try:
                 result = await read_category(request.category_id)
             except ApplicationError as exc:
-                _abort(context, exc)
+                await _abort(context, exc)
 
             return _to_category(result)
 
@@ -234,7 +234,7 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):  # type: i
         try:
             result = await read_list_categories()
         except ApplicationError as exc:
-            _abort(context, exc)
+            await _abort(context, exc)
 
         return catalog_pb2.ListCategoriesResponse(
             categories=[_to_category(category) for category in result]
@@ -258,7 +258,7 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):  # type: i
                     ),
                 )
             except ApplicationError as exc:
-                _abort(context, exc)
+                await _abort(context, exc)
 
             return _to_category(result)
 
@@ -273,6 +273,6 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):  # type: i
             try:
                 await delete_category(request.category_id)
             except ApplicationError as exc:
-                _abort(context, exc)
+                await _abort(context, exc)
 
             return Empty()
