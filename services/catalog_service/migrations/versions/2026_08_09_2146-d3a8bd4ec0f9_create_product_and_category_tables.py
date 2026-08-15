@@ -53,6 +53,12 @@ def upgrade() -> None:
     op.create_index(
         op.f("ix_products_category_id"), "products", ["category_id"], unique=False
     )
+    op.create_check_constraint(
+        "ck_products_price_non_negative", "products", "price >= 0"
+    )
+    op.create_check_constraint(
+        "ck_products_stock_non_negative", "products", "stock >= 0"
+    )
 
 
 def downgrade() -> None:
@@ -64,5 +70,7 @@ def downgrade() -> None:
         "ix_categories_path", table_name="categories", postgresql_using="gist"
     )
     op.drop_table("categories")
+    op.drop_check_constraint("ck_products_price_non_negative", "products")
+    op.drop_check_constraint("ck_products_stock_non_negative", "products")
 
     op.execute("DROP EXTENSION IF EXISTS ltree;")

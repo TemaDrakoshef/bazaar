@@ -1,15 +1,15 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ProductResponse(BaseModel):
     id: int
     category_id: int
-    title: str
-    description: str | None = None
-    price: int
-    stock: int
+    title: str = Field(min_length=1, max_length=255)
+    description: str | None = Field(default=None, max_length=2000)
+    price: int = Field(ge=0)
+    stock: int = Field(ge=0)
     is_active: bool
     created_at: datetime
     updated_at: datetime
@@ -17,18 +17,18 @@ class ProductResponse(BaseModel):
 
 class ProductCreateRequest(BaseModel):
     category_id: int
-    title: str
-    description: str | None = None
-    price: int
-    stock: int
+    title: str = Field(min_length=1, max_length=255)
+    description: str | None = Field(default=None, max_length=2000)
+    price: int = Field(ge=0)
+    stock: int = Field(ge=0)
 
 
 class ProductUpdateRequest(BaseModel):
     category_id: int | None = None
-    title: str | None = None
-    description: str | None = None
-    price: int | None = None
-    stock: int | None = None
+    title: str | None = Field(default=None, min_length=1, max_length=255)
+    description: str | None = Field(default=None, max_length=2000)
+    price: int | None = Field(default=None, ge=0)
+    stock: int | None = Field(default=None, ge=0)
     is_active: bool | None = None
 
 
