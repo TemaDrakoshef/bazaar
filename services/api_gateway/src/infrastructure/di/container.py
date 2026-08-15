@@ -11,6 +11,7 @@ from src.application.use_cases.catalog.create_category import CreateCategoryUseC
 from src.application.use_cases.catalog.create_product import CreateProductUseCase
 from src.application.use_cases.catalog.delete_category import DeleteCategoryUseCase
 from src.application.use_cases.catalog.delete_product import DeleteProductUseCase
+from src.application.use_cases.catalog.move_category import MoveCategoryUseCase
 from src.application.use_cases.catalog.read_category import ReadCategoryUseCase
 from src.application.use_cases.catalog.read_list_categories import (
     ReadListCategoriesUseCase,
@@ -101,6 +102,12 @@ class ApiGatewayProvider(Provider):
         self, catalog: AbstractCatalogGateway
     ) -> DeleteCategoryUseCase:
         return DeleteCategoryUseCase(catalog)
+
+    @provide(scope=Scope.REQUEST)
+    def provide_move_category_use_case(
+        self, catalog: AbstractCatalogGateway
+    ) -> MoveCategoryUseCase:
+        return MoveCategoryUseCase(catalog)
 
     @provide(scope=Scope.REQUEST)
     def provide_create_product_use_case(

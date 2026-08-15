@@ -3,6 +3,7 @@ import grpc.aio
 from src.domain.dtos.catalog import (
     CategoryCreateDTO,
     CategoryListQuery,
+    CategoryMoveDTO,
     CategoryResult,
     CategoryUpdateDTO,
     ProductCreateDTO,
@@ -21,6 +22,7 @@ def _to_category_result(response: catalog_pb2.Category) -> CategoryResult:
     return CategoryResult(
         id=response.id,
         name=response.name,
+        parent_id=response.parent_id or None,
         path=response.path,
         is_active=response.is_active,
         created_at=response.created_at.ToDatetime(),
@@ -86,8 +88,6 @@ class CatalogClient(AbstractCatalogGateway):
         request = catalog_pb2.UpdateCategoryRequest(category_id=category_id)
         if data.name is not None:
             request.name = data.name
-        if data.path is not None:
-            request.path = data.path
         if data.is_active is not None:
             request.is_active = data.is_active
         async with track_grpc_call("catalog", "UpdateCategory"):
@@ -105,6 +105,19 @@ class CatalogClient(AbstractCatalogGateway):
                 )
             except grpc.aio.AioRpcError as exc:
                 raise translate_grpc_error(exc) from exc
+
+    async def move_category(
+        self, category_id: int, data: CategoryMoveDTO
+    ) -> CategoryResult:
+        request = catalog_pb2.MoveCategoryRequest(category_id=category_id)
+        if data.parent_id is not None:
+            request.parent_id = data.parent_id
+        async with track_grpc_call("catalog", "MoveCategory"):
+            try:
+                response = await self._stub.MoveCategory(request)
+            except grpc.aio.AioRpcError as exc:
+                raise translate_grpc_error(exc) from exc
+        return _to_category_result(response)
 
     async def create_product(self, data: ProductCreateDTO) -> ProductResult:
         async with track_grpc_call("catalog", "CreateProduct"):

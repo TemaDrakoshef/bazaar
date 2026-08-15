@@ -6,6 +6,7 @@ from src.application.use_cases.catalog.create_category import CreateCategoryUseC
 from src.application.use_cases.catalog.create_product import CreateProductUseCase
 from src.application.use_cases.catalog.delete_category import DeleteCategoryUseCase
 from src.application.use_cases.catalog.delete_product import DeleteProductUseCase
+from src.application.use_cases.catalog.move_category import MoveCategoryUseCase
 from src.application.use_cases.catalog.read_category import ReadCategoryUseCase
 from src.application.use_cases.catalog.read_list_categories import (
     ReadListCategoriesUseCase,
@@ -19,6 +20,7 @@ from src.application.use_cases.catalog.update_product import UpdateProductUseCas
 from src.domain.dtos.catalog import (
     CategoryCreateDTO,
     CategoryListQuery,
+    CategoryMoveDTO,
     CategoryUpdateDTO,
     ProductCreateDTO,
     ProductListQuery,
@@ -26,6 +28,7 @@ from src.domain.dtos.catalog import (
 )
 from src.presentation.schemas.catalog import (
     CategoryCreateRequest,
+    CategoryMoveRequest,
     CategoryResponse,
     CategoryUpdateRequest,
     ProductCreateRequest,
@@ -93,6 +96,20 @@ async def delete_category(
 ) -> None:
     """Delete a category by id."""
     await use_case.execute(category_id)
+
+
+@router.patch("/category/{category_id}/move", response_model=CategoryResponse)
+@inject
+async def move_category(
+    category_id: int,
+    data: CategoryMoveRequest,
+    use_case: FromDishka[MoveCategoryUseCase],
+) -> CategoryResponse:
+    """Move a category under a new parent (or to the root when parent_id is absent)."""
+    result = await use_case.execute(
+        category_id, CategoryMoveDTO(**data.model_dump(exclude_none=True))
+    )
+    return CategoryResponse(**result.model_dump())
 
 
 @router.post("/product", response_model=ProductResponse, status_code=201)
