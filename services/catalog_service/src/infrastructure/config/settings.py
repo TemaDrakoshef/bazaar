@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str
     POSTGRES_DB: str
 
+    LOG_LEVEL: str = "INFO"
+    ENVIRONMENT: str = "dev"
+
     @property
     def DATABASE_URL(self) -> str:
         return (
