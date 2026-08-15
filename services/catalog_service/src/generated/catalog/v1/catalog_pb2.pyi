@@ -93,20 +93,22 @@ class UpdateProductRequest(_message.Message):
     def __init__(self, product_id: _Optional[int] = ..., category_id: _Optional[int] = ..., title: _Optional[str] = ..., description: _Optional[str] = ..., price: _Optional[int] = ..., stock: _Optional[int] = ..., is_active: _Optional[bool] = ...) -> None: ...
 
 class Category(_message.Message):
-    __slots__ = ("id", "name", "path", "is_active", "created_at", "updated_at")
+    __slots__ = ("id", "name", "path", "is_active", "created_at", "updated_at", "parent_id")
     ID_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
     PATH_FIELD_NUMBER: _ClassVar[int]
     IS_ACTIVE_FIELD_NUMBER: _ClassVar[int]
     CREATED_AT_FIELD_NUMBER: _ClassVar[int]
     UPDATED_AT_FIELD_NUMBER: _ClassVar[int]
+    PARENT_ID_FIELD_NUMBER: _ClassVar[int]
     id: int
     name: str
     path: str
     is_active: bool
     created_at: _timestamp_pb2.Timestamp
     updated_at: _timestamp_pb2.Timestamp
-    def __init__(self, id: _Optional[int] = ..., name: _Optional[str] = ..., path: _Optional[str] = ..., is_active: _Optional[bool] = ..., created_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., updated_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
+    parent_id: int
+    def __init__(self, id: _Optional[int] = ..., name: _Optional[str] = ..., path: _Optional[str] = ..., is_active: _Optional[bool] = ..., created_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., updated_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., parent_id: _Optional[int] = ...) -> None: ...
 
 class CreateCategoryRequest(_message.Message):
     __slots__ = ("name", "parent_id")
@@ -127,13 +129,19 @@ class ListCategoriesResponse(_message.Message):
     def __init__(self, categories: _Optional[_Iterable[_Union[Category, _Mapping]]] = ...) -> None: ...
 
 class UpdateCategoryRequest(_message.Message):
-    __slots__ = ("category_id", "name", "path", "is_active")
+    __slots__ = ("category_id", "name", "is_active")
     CATEGORY_ID_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
-    PATH_FIELD_NUMBER: _ClassVar[int]
     IS_ACTIVE_FIELD_NUMBER: _ClassVar[int]
     category_id: int
     name: str
-    path: str
     is_active: bool
-    def __init__(self, category_id: _Optional[int] = ..., name: _Optional[str] = ..., path: _Optional[str] = ..., is_active: _Optional[bool] = ...) -> None: ...
+    def __init__(self, category_id: _Optional[int] = ..., name: _Optional[str] = ..., is_active: _Optional[bool] = ...) -> None: ...
+
+class MoveCategoryRequest(_message.Message):
+    __slots__ = ("category_id", "parent_id")
+    CATEGORY_ID_FIELD_NUMBER: _ClassVar[int]
+    PARENT_ID_FIELD_NUMBER: _ClassVar[int]
+    category_id: int
+    parent_id: int
+    def __init__(self, category_id: _Optional[int] = ..., parent_id: _Optional[int] = ...) -> None: ...

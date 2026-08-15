@@ -85,6 +85,11 @@ class CatalogServiceStub:
                 request_serializer=catalog_dot_v1_dot_catalog__pb2.CategoryIdRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
+        self.MoveCategory = channel.unary_unary(
+                '/catalog.v1.CatalogService/MoveCategory',
+                request_serializer=catalog_dot_v1_dot_catalog__pb2.MoveCategoryRequest.SerializeToString,
+                response_deserializer=catalog_dot_v1_dot_catalog__pb2.Category.FromString,
+                _registered_method=True)
 
 
 class CatalogServiceServicer:
@@ -152,6 +157,12 @@ class CatalogServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def MoveCategory(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_CatalogServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -204,6 +215,11 @@ def add_CatalogServiceServicer_to_server(servicer, server):
                     servicer.DeleteCategory,
                     request_deserializer=catalog_dot_v1_dot_catalog__pb2.CategoryIdRequest.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'MoveCategory': grpc.unary_unary_rpc_method_handler(
+                    servicer.MoveCategory,
+                    request_deserializer=catalog_dot_v1_dot_catalog__pb2.MoveCategoryRequest.FromString,
+                    response_serializer=catalog_dot_v1_dot_catalog__pb2.Category.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -476,6 +492,33 @@ class CatalogService:
             '/catalog.v1.CatalogService/DeleteCategory',
             catalog_dot_v1_dot_catalog__pb2.CategoryIdRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def MoveCategory(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/catalog.v1.CatalogService/MoveCategory',
+            catalog_dot_v1_dot_catalog__pb2.MoveCategoryRequest.SerializeToString,
+            catalog_dot_v1_dot_catalog__pb2.Category.FromString,
             options,
             channel_credentials,
             insecure,
