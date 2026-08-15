@@ -148,3 +148,21 @@ def test_read_product_missing_maps_to_404(test_client, mock_catalog_gateway):
     resp = test_client.get("/api/v1/catalog/product/999")
 
     assert resp.status_code == 404
+
+
+def test_update_product_missing_maps_to_404(test_client, mock_catalog_gateway):
+    mock_catalog_gateway.update_product.side_effect = NotFoundError("product not found")
+
+    resp = test_client.patch(
+        "/api/v1/catalog/product/999", json={"title": "updated"}
+    )
+
+    assert resp.status_code == 404
+
+
+def test_delete_product_missing_maps_to_404(test_client, mock_catalog_gateway):
+    mock_catalog_gateway.delete_product.side_effect = NotFoundError("product not found")
+
+    resp = test_client.delete("/api/v1/catalog/product/999")
+
+    assert resp.status_code == 404
