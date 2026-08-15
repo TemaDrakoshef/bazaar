@@ -91,7 +91,7 @@ async def _abort(context: ServicerContext, exc: ApplicationError) -> None:
     await context.abort(exc.grpc_code, exc.detail)
 
 
-class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):  # type: ignore[misc]
+class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
     @inject
     async def CreateProduct(
         self,
@@ -101,11 +101,14 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):  # type: i
     ) -> catalog_pb2.Product:
         with _request_context(category_id=request.category_id):
             try:
+                description = (
+                    request.description if request.HasField("description") else None
+                )
                 result = await create_product(
                     ProductCreateDTO(
                         category_id=request.category_id,
                         title=request.title,
-                        description=request.description or None,
+                        description=description,
                         price=request.price,
                         stock=request.stock,
                     )
@@ -158,15 +161,25 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):  # type: i
     ) -> catalog_pb2.Product:
         with _request_context(product_id=request.product_id):
             try:
+                category_id = (
+                    request.category_id if request.HasField("category_id") else None
+                )
+                title = request.title if request.HasField("title") else None
+                description = (
+                    request.description if request.HasField("description") else None
+                )
+                price = request.price if request.HasField("price") else None
+                stock = request.stock if request.HasField("stock") else None
+                is_active = request.is_active if request.HasField("is_active") else None
                 result = await update_product(
                     request.product_id,
                     ProductUpdateDTO(
-                        category_id=request.category_id or None,
-                        title=request.title or None,
-                        description=request.description or None,
-                        price=request.price or None,
-                        stock=request.stock or None,
-                        is_active=request.is_active or None,
+                        category_id=category_id,
+                        title=title,
+                        description=description,
+                        price=price,
+                        stock=stock,
+                        is_active=is_active,
                     ),
                 )
             except ApplicationError as exc:
@@ -249,12 +262,15 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):  # type: i
     ) -> catalog_pb2.Category:
         with _request_context(category_id=request.category_id):
             try:
+                name = request.name if request.HasField("name") else None
+                path = request.path if request.HasField("path") else None
+                is_active = request.is_active if request.HasField("is_active") else None
                 result = await update_category(
                     request.category_id,
                     CategoryUpdateDTO(
-                        name=request.name or None,
-                        path=request.path or None,
-                        is_active=request.is_active or None,
+                        name=name,
+                        path=path,
+                        is_active=is_active,
                     ),
                 )
             except ApplicationError as exc:

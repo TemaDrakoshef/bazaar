@@ -41,11 +41,14 @@ class FakeCatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
     async def CreateProduct(self, request, context):
         uc = CreateProductUseCase(self._uow_factory())
         try:
+            description = (
+                request.description if request.HasField("description") else None
+            )
             result = await uc(
                 ProductCreateDTO(
                     category_id=request.category_id,
                     title=request.title,
-                    description=request.description or None,
+                    description=description,
                     price=request.price,
                     stock=request.stock,
                 )
@@ -77,15 +80,25 @@ class FakeCatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
     async def UpdateProduct(self, request, context):
         uc = UpdateProductUseCase(self._uow_factory())
         try:
+            category_id = (
+                request.category_id if request.HasField("category_id") else None
+            )
+            title = request.title if request.HasField("title") else None
+            description = (
+                request.description if request.HasField("description") else None
+            )
+            price = request.price if request.HasField("price") else None
+            stock = request.stock if request.HasField("stock") else None
+            is_active = request.is_active if request.HasField("is_active") else None
             result = await uc(
                 request.product_id,
                 ProductUpdateDTO(
-                    category_id=request.category_id or None,
-                    title=request.title or None,
-                    description=request.description or None,
-                    price=request.price or None,
-                    stock=request.stock or None,
-                    is_active=request.is_active or None,
+                    category_id=category_id,
+                    title=title,
+                    description=description,
+                    price=price,
+                    stock=stock,
+                    is_active=is_active,
                 ),
             )
         except ApplicationError as exc:
@@ -134,12 +147,15 @@ class FakeCatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
     async def UpdateCategory(self, request, context):
         uc = UpdateCategoryUseCase(self._uow_factory())
         try:
+            name = request.name if request.HasField("name") else None
+            path = request.path if request.HasField("path") else None
+            is_active = request.is_active if request.HasField("is_active") else None
             result = await uc(
                 request.category_id,
                 CategoryUpdateDTO(
-                    name=request.name or None,
-                    path=request.path or None,
-                    is_active=request.is_active or None,
+                    name=name,
+                    path=path,
+                    is_active=is_active,
                 ),
             )
         except ApplicationError as exc:
@@ -211,6 +227,54 @@ async def test_update_product_success_via_grpc():
         )
         assert resp.id == 1
         assert resp.title == "updated"
+    finally:
+        await stop()
+
+
+async def test_update_product_stock_zero_via_grpc():
+    product = make_product(id_=1, category_id=1)
+    category = make_category(id_=1)
+    stub, stop = await _serve(
+        lambda: FakeUnitOfWork(products=[product], categories=[category])
+    )
+    try:
+        resp = await stub.UpdateProduct(
+            catalog_pb2.UpdateProductRequest(product_id=1, stock=0)
+        )
+        assert resp.id == 1
+        assert resp.stock == 0
+    finally:
+        await stop()
+
+
+async def test_update_product_price_zero_via_grpc():
+    product = make_product(id_=1, category_id=1)
+    category = make_category(id_=1)
+    stub, stop = await _serve(
+        lambda: FakeUnitOfWork(products=[product], categories=[category])
+    )
+    try:
+        resp = await stub.UpdateProduct(
+            catalog_pb2.UpdateProductRequest(product_id=1, price=0)
+        )
+        assert resp.id == 1
+        assert resp.price == 0
+    finally:
+        await stop()
+
+
+async def test_update_product_is_active_false_via_grpc():
+    product = make_product(id_=1, category_id=1)
+    category = make_category(id_=1)
+    stub, stop = await _serve(
+        lambda: FakeUnitOfWork(products=[product], categories=[category])
+    )
+    try:
+        resp = await stub.UpdateProduct(
+            catalog_pb2.UpdateProductRequest(product_id=1, is_active=False)
+        )
+        assert resp.id == 1
+        assert resp.is_active is False
     finally:
         await stop()
 

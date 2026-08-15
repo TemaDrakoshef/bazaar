@@ -76,6 +76,6 @@ class AuthClient(AbstractAuthGateway):
                 raise translate_grpc_error(exc) from exc
         return TokenStatus(
             valid=response.valid,
-            user_id=response.user_id or None,
+            user_id=response.user_id if response.HasField("user_id") else None,
             error_message=response.error_message,
         )
