@@ -207,9 +207,7 @@ async def test_update_product_success_via_grpc():
     )
     try:
         resp = await stub.UpdateProduct(
-            catalog_pb2.UpdateProductRequest(
-                product_id=1, title="updated", price=200
-            )
+            catalog_pb2.UpdateProductRequest(product_id=1, title="updated", price=200)
         )
         assert resp.id == 1
         assert resp.title == "updated"

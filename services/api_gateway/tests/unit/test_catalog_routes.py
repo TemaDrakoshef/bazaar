@@ -153,9 +153,7 @@ def test_read_product_missing_maps_to_404(test_client, mock_catalog_gateway):
 def test_update_product_missing_maps_to_404(test_client, mock_catalog_gateway):
     mock_catalog_gateway.update_product.side_effect = NotFoundError("product not found")
 
-    resp = test_client.patch(
-        "/api/v1/catalog/product/999", json={"title": "updated"}
-    )
+    resp = test_client.patch("/api/v1/catalog/product/999", json={"title": "updated"})
 
     assert resp.status_code == 404
 
