@@ -8,8 +8,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.infrastructure.config.settings import settings
 from src.infrastructure.di.container import ApiGatewayProvider
+from src.infrastructure.logging import setup_logging
 from src.presentation.api.router import api_router
 from src.presentation.exception_handlers import register_exception_handlers
+from src.presentation.middleware.logging import LoggingMiddleware
 
 
 def create_app(*extra_providers: Provider) -> FastAPI:
@@ -19,6 +21,8 @@ def create_app(*extra_providers: Provider) -> FastAPI:
     override its factories (dishka ``override=True``) — used by tests to
     replace ports with mocks.
     """
+    setup_logging(settings)
+
     container = make_async_container(
         ApiGatewayProvider(), *extra_providers, FastapiProvider()
     )
@@ -39,6 +43,7 @@ def create_app(*extra_providers: Provider) -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.add_middleware(LoggingMiddleware)
     app.include_router(api_router)
     register_exception_handlers(app)
 
