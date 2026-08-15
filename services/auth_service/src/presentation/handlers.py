@@ -1,8 +1,13 @@
-import logging
+from __future__ import annotations
+
+from collections.abc import Iterator
+from contextlib import contextmanager
 from uuid import UUID
 
+import structlog
 from grpc import ServicerContext
 from pydantic import ValidationError as PydanticValidationError
+from structlog.contextvars import bind_contextvars, clear_contextvars
 
 from src.domain.exceptions import ApplicationError, ValidationError
 from src.generated.auth.v1 import auth_pb2, auth_pb2_grpc
@@ -19,11 +24,21 @@ from src.usecase.signup.usecase import SignUpUsecase
 from src.usecase.validate.request import ValidateTokenRequest
 from src.usecase.validate.usecase import ValidateTokenUsecase
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 
 def _uow() -> SQLAlchemyUnitOfWork:
     return SQLAlchemyUnitOfWork(async_session_maker)
+
+
+@contextmanager
+def _request_context(**context: object) -> Iterator[None]:
+    """Bind structured logging context for the duration of one RPC."""
+    bind_contextvars(**context)
+    try:
+        yield
+    finally:
+        clear_contextvars()
 
 
 class AuthServiceHandler(auth_pb2_grpc.AuthServiceServicer):
@@ -38,57 +53,69 @@ class AuthServiceHandler(auth_pb2_grpc.AuthServiceServicer):
         elif isinstance(exc, ApplicationError):
             error = exc
         else:
-            logger.exception("Unhandled error while serving request")
+            logger.exception(
+                "auth.unhandled_error",
+                error_type=type(exc).__name__,
+                error=repr(exc),
+            )
             error = ApplicationError()
-        logger.warning("Request failed: %s (%s)", error.detail, error.grpc_code.name)
+        logger.warning(
+            "auth.request_failed",
+            error_type=type(error).__name__,
+            grpc_code=error.grpc_code.name,
+            detail=error.detail,
+        )
         await context.abort(error.grpc_code, error.detail)
 
     async def SignUp(
         self, request: auth_pb2.SignUpRequest, context: ServicerContext
     ) -> auth_pb2.SignUpResponse:
-        uc = SignUpUsecase(uow=self._uow_factory())
-        try:
-            result = await uc.execute(
-                SignUpRequest(
-                    email=request.email,
-                    phone=request.phone,
-                    password=request.password,
+        with _request_context(email=request.email):
+            uc = SignUpUsecase(uow=self._uow_factory())
+            try:
+                result = await uc.execute(
+                    SignUpRequest(
+                        email=request.email,
+                        phone=request.phone,
+                        password=request.password,
+                    )
                 )
-            )
-        except Exception as e:
-            await self._abort(context, e)
+            except Exception as e:
+                await self._abort(context, e)
 
-        return auth_pb2.SignUpResponse(
-            access_token=result.access_token,
-            refresh_token=result.refresh_token,
-        )
+            return auth_pb2.SignUpResponse(
+                access_token=result.access_token,
+                refresh_token=result.refresh_token,
+            )
 
     async def Login(
         self, request: auth_pb2.LoginRequest, context: ServicerContext
     ) -> auth_pb2.LoginResponse:
-        uc = LoginUsecase(uow=self._uow_factory())
-        try:
-            result = await uc.execute(
-                LoginRequest(email=request.email, password=request.password)
-            )
-        except Exception as e:
-            await self._abort(context, e)
+        with _request_context(email=request.email):
+            uc = LoginUsecase(uow=self._uow_factory())
+            try:
+                result = await uc.execute(
+                    LoginRequest(email=request.email, password=request.password)
+                )
+            except Exception as e:
+                await self._abort(context, e)
 
-        return auth_pb2.LoginResponse(
-            access_token=result.access_token,
-            refresh_token=result.refresh_token,
-        )
+            return auth_pb2.LoginResponse(
+                access_token=result.access_token,
+                refresh_token=result.refresh_token,
+            )
 
     async def Logout(
         self, request: auth_pb2.LogoutRequest, context: ServicerContext
     ) -> auth_pb2.LogoutResponse:
-        uc = LogoutUsecase(uow=self._uow_factory())
-        try:
-            await uc.execute(LogoutRequest(session_id=UUID(request.session_id)))
-        except Exception as e:
-            await self._abort(context, e)
+        with _request_context(session_id=request.session_id):
+            uc = LogoutUsecase(uow=self._uow_factory())
+            try:
+                await uc.execute(LogoutRequest(session_id=UUID(request.session_id)))
+            except Exception as e:
+                await self._abort(context, e)
 
-        return auth_pb2.LogoutResponse()
+            return auth_pb2.LogoutResponse()
 
     async def Refresh(
         self, request: auth_pb2.RefreshRequest, context: ServicerContext
