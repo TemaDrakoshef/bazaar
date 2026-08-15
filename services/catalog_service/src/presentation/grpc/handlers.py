@@ -1,9 +1,13 @@
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import datetime
 
+import structlog
 from dishka.integrations.grpcio import FromDishka, inject
 from google.protobuf.empty_pb2 import Empty
 from google.protobuf.timestamp_pb2 import Timestamp
 from grpc import ServicerContext
+from structlog.contextvars import bind_contextvars, clear_contextvars
 
 from src.application.use_cases.create_category import (
     CreateCategoryUseCase,
@@ -31,6 +35,8 @@ from src.domain.entities.category import Category
 from src.domain.entities.product import Product
 from src.domain.exceptions import ApplicationError
 from src.generated.catalog.v1 import catalog_pb2, catalog_pb2_grpc
+
+logger = structlog.get_logger()
 
 
 def _to_timestamp(value: datetime) -> Timestamp:
@@ -64,7 +70,28 @@ def _to_product(product: Product) -> catalog_pb2.Product:
     )
 
 
-class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
+@contextmanager
+def _request_context(**context: object) -> Iterator[None]:
+    """Bind structured logging context for the duration of one RPC."""
+    bind_contextvars(**context)
+    try:
+        yield
+    finally:
+        clear_contextvars()
+
+
+def _abort(context: ServicerContext, exc: ApplicationError) -> None:
+    """Log a domain error and abort the RPC with its gRPC status."""
+    logger.warning(
+        "catalog.request_failed",
+        error_type=type(exc).__name__,
+        grpc_code=exc.grpc_code.name,
+        detail=exc.detail,
+    )
+    context.abort(exc.grpc_code, exc.detail)
+
+
+class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):  # type: ignore[misc]
     @inject
     async def CreateProduct(
         self,
@@ -72,20 +99,21 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
         context: ServicerContext,
         create_product: FromDishka[CreateProductUseCase],
     ) -> catalog_pb2.Product:
-        try:
-            result = await create_product(
-                ProductCreateDTO(
-                    category_id=request.category_id,
-                    title=request.title,
-                    description=request.description or None,
-                    price=request.price,
-                    stock=request.stock,
+        with _request_context(category_id=request.category_id):
+            try:
+                result = await create_product(
+                    ProductCreateDTO(
+                        category_id=request.category_id,
+                        title=request.title,
+                        description=request.description or None,
+                        price=request.price,
+                        stock=request.stock,
+                    )
                 )
-            )
-        except ApplicationError as exc:
-            await context.abort(exc.grpc_code, exc.detail)
+            except ApplicationError as exc:
+                _abort(context, exc)
 
-        return _to_product(result)
+            return _to_product(result)
 
     @inject
     async def ReadProduct(
@@ -94,12 +122,13 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
         context: ServicerContext,
         read_product: FromDishka[ReadProductUseCase],
     ) -> catalog_pb2.Product:
-        try:
-            result = await read_product(request.product_id)
-        except ApplicationError as exc:
-            await context.abort(exc.grpc_code, exc.detail)
+        with _request_context(product_id=request.product_id):
+            try:
+                result = await read_product(request.product_id)
+            except ApplicationError as exc:
+                _abort(context, exc)
 
-        return _to_product(result)
+            return _to_product(result)
 
     @inject
     async def ReadListProducts(
@@ -108,16 +137,17 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
         context: ServicerContext,
         read_list_products: FromDishka[ReadListProductsUseCase],
     ) -> catalog_pb2.ListProductsResponse:
-        try:
-            products, count = await read_list_products(
-                ProductListQueryDTO(limit=request.limit, offset=request.offset)
-            )
-        except ApplicationError as exc:
-            await context.abort(exc.grpc_code, exc.detail)
+        with _request_context(limit=request.limit, offset=request.offset):
+            try:
+                products, count = await read_list_products(
+                    ProductListQueryDTO(limit=request.limit, offset=request.offset)
+                )
+            except ApplicationError as exc:
+                _abort(context, exc)
 
-        return catalog_pb2.ListProductsResponse(
-            products=[_to_product(product) for product in products], count=count
-        )
+            return catalog_pb2.ListProductsResponse(
+                products=[_to_product(product) for product in products], count=count
+            )
 
     @inject
     async def UpdateProduct(
@@ -126,22 +156,23 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
         context: ServicerContext,
         update_product: FromDishka[UpdateProductUseCase],
     ) -> catalog_pb2.Product:
-        try:
-            result = await update_product(
-                request.product_id,
-                ProductUpdateDTO(
-                    category_id=request.category_id or None,
-                    title=request.title or None,
-                    description=request.description or None,
-                    price=request.price or None,
-                    stock=request.stock or None,
-                    is_active=request.is_active or None,
-                ),
-            )
-        except ApplicationError as exc:
-            await context.abort(exc.grpc_code, exc.detail)
+        with _request_context(product_id=request.product_id):
+            try:
+                result = await update_product(
+                    request.product_id,
+                    ProductUpdateDTO(
+                        category_id=request.category_id or None,
+                        title=request.title or None,
+                        description=request.description or None,
+                        price=request.price or None,
+                        stock=request.stock or None,
+                        is_active=request.is_active or None,
+                    ),
+                )
+            except ApplicationError as exc:
+                _abort(context, exc)
 
-        return _to_product(result)
+            return _to_product(result)
 
     @inject
     async def DeleteProduct(
@@ -150,57 +181,60 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
         context: ServicerContext,
         delete_product: FromDishka[DeleteProductUseCase],
     ) -> Empty:
-        try:
-            await delete_product(request.product_id)
-        except ApplicationError as exc:
-            await context.abort(exc.grpc_code, exc.detail)
+        with _request_context(product_id=request.product_id):
+            try:
+                await delete_product(request.product_id)
+            except ApplicationError as exc:
+                _abort(context, exc)
 
-        return Empty()
+            return Empty()
 
     @inject
     async def CreateCategory(
         self,
         request: catalog_pb2.CreateCategoryRequest,
         context: ServicerContext,
-        create_category: FromDishka["CreateCategoryUseCase"],
+        create_category: FromDishka[CreateCategoryUseCase],
     ) -> catalog_pb2.Category:
-        try:
-            result = await create_category(
-                CategoryCreateDTO(
-                    name=request.name,
-                    parent_id=request.parent_id,
+        with _request_context(parent_id=request.parent_id):
+            try:
+                result = await create_category(
+                    CategoryCreateDTO(
+                        name=request.name,
+                        parent_id=request.parent_id,
+                    )
                 )
-            )
-        except ApplicationError as exc:
-            await context.abort(exc.grpc_code, exc.detail)
+            except ApplicationError as exc:
+                _abort(context, exc)
 
-        return _to_category(result)
+            return _to_category(result)
 
     @inject
     async def ReadCategory(
         self,
         request: catalog_pb2.CategoryIdRequest,
         context: ServicerContext,
-        read_category: FromDishka["ReadCategoryUseCase"],
+        read_category: FromDishka[ReadCategoryUseCase],
     ) -> catalog_pb2.Category:
-        try:
-            result = await read_category(request.category_id)
-        except ApplicationError as exc:
-            await context.abort(exc.grpc_code, exc.detail)
+        with _request_context(category_id=request.category_id):
+            try:
+                result = await read_category(request.category_id)
+            except ApplicationError as exc:
+                _abort(context, exc)
 
-        return _to_category(result)
+            return _to_category(result)
 
     @inject
     async def ReadListCategories(
         self,
         request: catalog_pb2.ListCategoriesRequest,
         context: ServicerContext,
-        read_list_categories: FromDishka["ReadListCategoriesUseCase"],
+        read_list_categories: FromDishka[ReadListCategoriesUseCase],
     ) -> catalog_pb2.ListCategoriesResponse:
         try:
             result = await read_list_categories()
         except ApplicationError as exc:
-            await context.abort(exc.grpc_code, exc.detail)
+            _abort(context, exc)
 
         return catalog_pb2.ListCategoriesResponse(
             categories=[_to_category(category) for category in result]
@@ -211,32 +245,34 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
         self,
         request: catalog_pb2.UpdateCategoryRequest,
         context: ServicerContext,
-        update_category: FromDishka["UpdateCategoryUseCase"],
+        update_category: FromDishka[UpdateCategoryUseCase],
     ) -> catalog_pb2.Category:
-        try:
-            result = await update_category(
-                request.category_id,
-                CategoryUpdateDTO(
-                    name=request.name or None,
-                    path=request.path or None,
-                    is_active=request.is_active or None,
-                ),
-            )
-        except ApplicationError as exc:
-            await context.abort(exc.grpc_code, exc.detail)
+        with _request_context(category_id=request.category_id):
+            try:
+                result = await update_category(
+                    request.category_id,
+                    CategoryUpdateDTO(
+                        name=request.name or None,
+                        path=request.path or None,
+                        is_active=request.is_active or None,
+                    ),
+                )
+            except ApplicationError as exc:
+                _abort(context, exc)
 
-        return _to_category(result)
+            return _to_category(result)
 
     @inject
     async def DeleteCategory(
         self,
         request: catalog_pb2.CategoryIdRequest,
         context: ServicerContext,
-        delete_category: FromDishka["DeleteCategoryUseCase"],
+        delete_category: FromDishka[DeleteCategoryUseCase],
     ) -> Empty:
-        try:
-            await delete_category(request.category_id)
-        except ApplicationError as exc:
-            await context.abort(exc.grpc_code, exc.detail)
+        with _request_context(category_id=request.category_id):
+            try:
+                await delete_category(request.category_id)
+            except ApplicationError as exc:
+                _abort(context, exc)
 
-        return Empty()
+            return Empty()
