@@ -4,7 +4,7 @@ networks:
 
 volumes:
   prometheus-data:
-    #   loki-data:
+  loki-data:
     #   tempo-data:
     #   grafana-data:
     #   alertmanager-data:
@@ -23,10 +23,10 @@ services:
       - "${OTEL_COLLECTOR_OTLP_HTTP_PORT:-4318}:4318" # OTLP/HTTP
       - "${OTEL_COLLECTOR_METRICS_PORT:-8889}:8889" # Prometheus scrape endpoint
       - "13133:13133" # healthz
-      # depends_on:
+    depends_on:
+      loki:
+        condition: service_started
       # tempo:
-      #   condition: service_started
-      # loki:
       #   condition: service_started
     networks:
       - app-network
@@ -57,5 +57,19 @@ services:
     # depends_on:
     #   alertmanager:
     #     condition: service_started
+    networks:
+      - app-network
+
+  loki:
+    image: grafana/loki:3.7.6
+    container_name: bazaar-loki
+    command:
+      - "-config.file=/etc/loki/loki-config.yaml"
+      - "-config.expand-env=true"
+    volumes:
+      - ../../observability/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - loki-data:/loki
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
     networks:
       - app-network

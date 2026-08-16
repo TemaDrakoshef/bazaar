@@ -37,10 +37,10 @@ exporters:
     namespace: bazaar
     resource_to_telemetry_conversion:
       enabled: true
-  # otlphttp/loki:
-  #   endpoint: http://loki:3100/otlp
-  #   tls:
-  #     insecure: true
+  otlphttp/loki:
+    endpoint: http://loki:3100/otlp
+    tls:
+      insecure: true
 
 service:
   pipelines:
@@ -52,7 +52,7 @@ service:
       receivers: [otlp]
       processors: [memory_limiter, resourcedetection, resource, batch]
       exporters: [prometheus]
-    # logs:
-    #   receivers: [otlp]
-    #   processors: [memory_limiter, resourcedetection, resource, batch]
-    #   exporters: [otlphttp/loki, debug]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, resourcedetection, resource, batch]
+      exporters: [otlphttp/loki]
