@@ -54,7 +54,6 @@
 	"editable": true,
 	"fiscalYearStartMonth": 0,
 	"graphTooltip": 1,
-	"id": null,
 	"links": [],
 	"panels": [
 		{
@@ -101,7 +100,7 @@
 		{
 			"id": 2,
 			"type": "stat",
-			"title": "Error Rate",
+			"title": "5xx Error Rate",
 			"datasource": {
 				"type": "prometheus",
 				"uid": "${DS_PROMETHEUS}"
@@ -200,7 +199,7 @@
 		{
 			"id": 4,
 			"type": "stat",
-			"title": "Requests",
+			"title": "Active Requests",
 			"datasource": {
 				"type": "prometheus",
 				"uid": "${DS_PROMETHEUS}"
@@ -213,8 +212,8 @@
 			},
 			"targets": [
 				{
-					"expr": "sum(increase(http_server_request_duration_seconds_count{service_name=~\"$service\"}[$__range]))",
-					"legendFormat": "requests",
+					"expr": "sum(http_server_active_requests{service_name=~\"$service\"})",
+					"legendFormat": "active",
 					"refId": "A"
 				}
 			],
@@ -241,7 +240,7 @@
 		{
 			"id": 5,
 			"type": "timeseries",
-			"title": "HTTP Requests",
+			"title": "Request Rate",
 			"datasource": {
 				"type": "prometheus",
 				"uid": "${DS_PROMETHEUS}"
@@ -279,7 +278,7 @@
 		{
 			"id": 6,
 			"type": "timeseries",
-			"title": "HTTP Error Rate",
+			"title": "Requests by Status Code",
 			"datasource": {
 				"type": "prometheus",
 				"uid": "${DS_PROMETHEUS}"
@@ -292,7 +291,7 @@
 			},
 			"targets": [
 				{
-					"expr": "sum by (http_response_status_code) (rate(http_server_request_duration_seconds_count{service_name=~\"$service\",http_response_status_code=~\"4..|5..\"}[5m]))",
+					"expr": "sum by (http_response_status_code) (rate(http_server_request_duration_seconds_count{service_name=~\"$service\"}[5m]))",
 					"legendFormat": "{{http_response_status_code}}",
 					"refId": "A"
 				}
@@ -306,8 +305,8 @@
 			},
 			"options": {
 				"legend": {
-					"displayMode": "list",
-					"placement": "bottom"
+					"displayMode": "table",
+					"placement": "right"
 				},
 				"tooltip": {
 					"mode": "multi"
@@ -317,7 +316,7 @@
 		{
 			"id": 7,
 			"type": "timeseries",
-			"title": "HTTP Latency",
+			"title": "Request Latency",
 			"datasource": {
 				"type": "prometheus",
 				"uid": "${DS_PROMETHEUS}"
@@ -365,7 +364,7 @@
 		{
 			"id": 8,
 			"type": "timeseries",
-			"title": "HTTP Requests by Status",
+			"title": "Active Requests",
 			"datasource": {
 				"type": "prometheus",
 				"uid": "${DS_PROMETHEUS}"
@@ -378,22 +377,22 @@
 			},
 			"targets": [
 				{
-					"expr": "sum by (http_response_status_code) (rate(http_server_request_duration_seconds_count{service_name=~\"$service\"}[5m]))",
-					"legendFormat": "{{http_response_status_code}}",
+					"expr": "sum(http_server_active_requests{service_name=~\"$service\"})",
+					"legendFormat": "active requests",
 					"refId": "A"
 				}
 			],
 			"fieldConfig": {
 				"defaults": {
-					"unit": "reqps",
-					"decimals": 2
+					"unit": "short",
+					"decimals": 0
 				},
 				"overrides": []
 			},
 			"options": {
 				"legend": {
-					"displayMode": "table",
-					"placement": "right"
+					"displayMode": "list",
+					"placement": "bottom"
 				},
 				"tooltip": {
 					"mode": "multi"
@@ -402,6 +401,158 @@
 		},
 		{
 			"id": 9,
+			"type": "timeseries",
+			"title": "Request Duration by HTTP Method",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${DS_PROMETHEUS}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 20
+			},
+			"targets": [
+				{
+					"expr": "histogram_quantile(0.95, sum by (le, http_request_method) (rate(http_server_request_duration_seconds_bucket{service_name=~\"$service\"}[5m])))",
+					"legendFormat": "{{http_request_method}} p95",
+					"refId": "A"
+				}
+			],
+			"fieldConfig": {
+				"defaults": {
+					"unit": "s",
+					"decimals": 3
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom"
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			}
+		},
+		{
+			"id": 10,
+			"type": "timeseries",
+			"title": "Request Duration by Route",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${DS_PROMETHEUS}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 12,
+				"y": 20
+			},
+			"targets": [
+				{
+					"expr": "histogram_quantile(0.95, sum by (le, http_route) (rate(http_server_request_duration_seconds_bucket{service_name=~\"$service\"}[5m])))",
+					"legendFormat": "{{http_route}}",
+					"refId": "A"
+				}
+			],
+			"fieldConfig": {
+				"defaults": {
+					"unit": "s",
+					"decimals": 3
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "bottom"
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			}
+		},
+		{
+			"id": 11,
+			"type": "timeseries",
+			"title": "Response Size",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${DS_PROMETHEUS}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 28
+			},
+			"targets": [
+				{
+					"expr": "sum(rate(http_server_response_body_size_bytes_sum{service_name=~\"$service\"}[5m]))",
+					"legendFormat": "bytes/s",
+					"refId": "A"
+				}
+			],
+			"fieldConfig": {
+				"defaults": {
+					"unit": "Bps",
+					"decimals": 2
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom"
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			}
+		},
+		{
+			"id": 12,
+			"type": "timeseries",
+			"title": "Request Size",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${DS_PROMETHEUS}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 12,
+				"y": 28
+			},
+			"targets": [
+				{
+					"expr": "sum(rate(http_server_request_body_size_bytes_sum{service_name=~\"$service\"}[5m]))",
+					"legendFormat": "bytes/s",
+					"refId": "A"
+				}
+			],
+			"fieldConfig": {
+				"defaults": {
+					"unit": "Bps",
+					"decimals": 2
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom"
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			}
+		},
+		{
+			"id": 13,
 			"type": "logs",
 			"title": "Application Logs",
 			"datasource": {
@@ -412,7 +563,7 @@
 				"h": 12,
 				"w": 24,
 				"x": 0,
-				"y": 20
+				"y": 36
 			},
 			"targets": [
 				{
@@ -431,7 +582,7 @@
 			}
 		},
 		{
-			"id": 10,
+			"id": 14,
 			"type": "logs",
 			"title": "Errors",
 			"datasource": {
@@ -442,7 +593,7 @@
 				"h": 10,
 				"w": 24,
 				"x": 0,
-				"y": 32
+				"y": 48
 			},
 			"targets": [
 				{
@@ -531,5 +682,5 @@
 	"timezone": "browser",
 	"title": "Bazaar Observability",
 	"uid": "bazaar-observability",
-	"version": 1
+	"version": 2
 }

@@ -5,6 +5,7 @@ from dishka import Provider, make_async_container
 from dishka.integrations.fastapi import FastapiProvider, setup_dishka
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from opentelemetry import metrics
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.grpc import GrpcAioInstrumentorClient
 
@@ -51,6 +52,7 @@ def create_app(*extra_providers: Provider) -> FastAPI:
 
     FastAPIInstrumentor.instrument_app(
         app,
+        meter_provider=metrics.get_meter_provider(),
         excluded_urls="(metrics|healthz?|readyz|docs)",
     )
     GrpcAioInstrumentorClient().instrument()

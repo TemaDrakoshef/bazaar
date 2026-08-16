@@ -33,7 +33,7 @@ def setup_metrics(resource: Resource, endpoint: str) -> None:
 
     metric_reader = PeriodicExportingMetricReader(
         metric_exporter,
-        # export_interval_millis=interval_ms, # default 60 sec
+        export_interval_millis=10_000,
     )
 
     meter_provider = MeterProvider(
