@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     ENVIRONMENT: str = "dev"
 
+    otel_exporter_otlp_endpoint: str = "otel-collector:4317"
+
     @property
     def auth_address(self) -> str:
         return f"{self.auth_service_host}:{self.auth_service_port}"

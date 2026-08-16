@@ -1,4 +1,5 @@
 import logging
+import os
 
 from opentelemetry import _logs, metrics
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter
@@ -11,12 +12,17 @@ from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import Resource
 
+from src.infrastructure.config.settings import settings
+
 
 def setup_telemetry(
     service_name: str = "api-gateway",
     service_namespace: str = "bazaar",
-    endpoint: str = "http://otel-collector:4317",
+    endpoint: str | None = None,
 ) -> None:
+    if endpoint is None:
+        endpoint = settings.otel_exporter_otlp_endpoint
+
     resource = Resource.create({
         "service.name": service_name,
         "service.namespace": service_namespace,

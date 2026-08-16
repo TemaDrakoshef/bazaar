@@ -26,7 +26,7 @@ def create_app(*extra_providers: Provider) -> FastAPI:
     replace ports with mocks.
     """
     setup_logging(settings)
-    setup_telemetry()
+    setup_telemetry(endpoint=settings.otel_exporter_otlp_endpoint)
 
     container = make_async_container(
         ApiGatewayProvider(), *extra_providers, FastapiProvider()
