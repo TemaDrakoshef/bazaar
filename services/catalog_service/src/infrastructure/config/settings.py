@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     ENVIRONMENT: str = "dev"
 
+    OTEL_EXPORTER_OTLP_ENDPOINT: str = "otel-collector:4317"
+
     @property
     def DATABASE_URL(self) -> str:
         return (

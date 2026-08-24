@@ -22,8 +22,7 @@ class FakeProductRepo:
             record
             for record in self.records
             if all(
-                getattr(record, key, None) == value
-                for key, value in filters.items()
+                getattr(record, key, None) == value for key, value in filters.items()
             )
         ]
 
@@ -65,8 +64,7 @@ class FakeCategoryRepo:
             record
             for record in self.records
             if all(
-                getattr(record, key, None) == value
-                for key, value in filters.items()
+                getattr(record, key, None) == value for key, value in filters.items()
             )
         ]
 

@@ -21,8 +21,6 @@ class CategoryRepository(BaseRepository):
     async def get_descendants(self, path: str) -> list[CategoryORM]:
         """Retrieves every category whose path lies under ``path``, including itself."""
 
-        query = select(self._model).where(
-            self._model.path.descendant_of(Ltree(path))
-        )
+        query = select(self._model).where(self._model.path.descendant_of(Ltree(path)))
         result = await self._session.execute(query)
         return result.scalars().all()

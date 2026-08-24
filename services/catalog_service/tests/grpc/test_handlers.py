@@ -122,9 +122,7 @@ class FakeCatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
         uc = CreateCategoryUseCase(self._uow_factory())
         try:
             parent_id = request.parent_id if request.HasField("parent_id") else None
-            result = await uc(
-                CategoryCreateDTO(name=request.name, parent_id=parent_id)
-            )
+            result = await uc(CategoryCreateDTO(name=request.name, parent_id=parent_id))
         except ApplicationError as exc:
             await self._abort(context, exc)
         return _to_category(result)
@@ -164,9 +162,7 @@ class FakeCatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
         uc = MoveCategoryUseCase(self._uow_factory())
         try:
             parent_id = request.parent_id if request.HasField("parent_id") else None
-            result = await uc(
-                request.category_id, CategoryMoveDTO(parent_id=parent_id)
-            )
+            result = await uc(request.category_id, CategoryMoveDTO(parent_id=parent_id))
         except ApplicationError as exc:
             await self._abort(context, exc)
         return _to_category(result)

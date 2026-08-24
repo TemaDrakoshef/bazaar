@@ -11,17 +11,12 @@ from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import Resource
 
-from src.infrastructure.config.settings import settings
-
 
 def setup_telemetry(
-    service_name: str = "api-gateway",
+    endpoint: str,
+    service_name: str = "catalog-service",
     service_namespace: str = "bazaar",
-    endpoint: str | None = None,
 ) -> None:
-    if endpoint is None:
-        endpoint = settings.otel_exporter_otlp_endpoint
-
     resource = Resource.create(
         {
             "service.name": service_name,

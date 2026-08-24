@@ -53,9 +53,7 @@ async def test_create_child_under_parent():
 async def test_move_rewrites_descendant_paths():
     uow = FakeUnitOfWork(categories=_tree())
 
-    result = await MoveCategoryUseCase(uow)(
-        2, CategoryMoveDTO(parent_id=7)
-    )
+    result = await MoveCategoryUseCase(uow)(2, CategoryMoveDTO(parent_id=7))
 
     assert result.path == "7.2"
     assert result.parent_id == 7

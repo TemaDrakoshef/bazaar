@@ -5,8 +5,6 @@ import sys
 
 import structlog
 
-from src.infrastructure.config.settings import Settings
-
 _LEVELS = {
     "CRITICAL": logging.CRITICAL,
     "ERROR": logging.ERROR,
@@ -16,11 +14,10 @@ _LEVELS = {
 }
 
 
-def setup_logging(settings: Settings | None = None) -> None:
+def setup_logging(log_level: str = "INFO", environment: str = "dev") -> None:
     """Configure structlog and the standard-library logging bridge."""
-    settings = settings or Settings()
 
-    level = _LEVELS.get(settings.LOG_LEVEL.upper(), logging.INFO)
+    level = _LEVELS.get(log_level.upper(), logging.INFO)
 
     shared_processors: list[structlog.typing.Processor] = [
         structlog.contextvars.merge_contextvars,
@@ -31,7 +28,7 @@ def setup_logging(settings: Settings | None = None) -> None:
         structlog.processors.format_exc_info,
     ]
 
-    if settings.ENVIRONMENT.lower() == "production":
+    if environment.lower() == "production":
         renderer: structlog.typing.Processor = structlog.processors.JSONRenderer()
     else:
         renderer = structlog.dev.ConsoleRenderer()

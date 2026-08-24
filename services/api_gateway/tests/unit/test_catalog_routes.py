@@ -179,9 +179,7 @@ def test_delete_category_with_children_maps_to_409(test_client, mock_catalog_gat
 def test_move_category_returns_mapped_response(test_client, mock_catalog_gateway):
     mock_catalog_gateway.move_category.return_value = _category()
 
-    resp = test_client.patch(
-        "/api/v1/catalog/category/1/move", json={"parent_id": 7}
-    )
+    resp = test_client.patch("/api/v1/catalog/category/1/move", json={"parent_id": 7})
 
     assert resp.status_code == 200
     assert resp.json()["id"] == 1
