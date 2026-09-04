@@ -1,0 +1,2 @@
+# A stub so that an empty shared/hooks directory gets into git.
+# Reused hooks (useDebounce, useMediaQuery, etc.) will move here.
