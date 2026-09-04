@@ -92,3 +92,7 @@ volumes/
 *.seed
 tmp/
 temp/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
