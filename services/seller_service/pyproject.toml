@@ -1,0 +1,32 @@
+[project]
+name = "seller-service"
+version = "0.1.0"
+description = "Seller microservice (merchants, members, access control)"
+requires-python = ">=3.12"
+authors = [
+    { name = "TemaDrakoshef", email = "artem125149@gmail.com" },
+]
+dependencies = [
+    "alembic>=1.18.5",
+    "asyncpg>=0.31.0",
+    "dishka>=1.10.0",
+    "grpcio>=1.83.0",
+    "protobuf>=7.35.1",
+    "pydantic-settings>=2.14.2",
+    "sqlalchemy>=2.0.51",
+    "structlog>=26.1.0",
+    "opentelemetry-api>=1.44.0",
+    "opentelemetry-sdk>=1.44.0",
+    "opentelemetry-instrumentation-grpc>=0.65b0",
+    "opentelemetry-exporter-otlp>=1.44.0",
+]
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = [
+    "grpcio-tools>=1.83.0",
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+]
