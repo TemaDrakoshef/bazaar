@@ -3,9 +3,7 @@ from dishka.integrations.fastapi import inject
 from fastapi import APIRouter
 
 from src.application.use_cases.catalog.create_category import CreateCategoryUseCase
-from src.application.use_cases.catalog.create_product import CreateProductUseCase
 from src.application.use_cases.catalog.delete_category import DeleteCategoryUseCase
-from src.application.use_cases.catalog.delete_product import DeleteProductUseCase
 from src.application.use_cases.catalog.move_category import MoveCategoryUseCase
 from src.application.use_cases.catalog.read_category import ReadCategoryUseCase
 from src.application.use_cases.catalog.read_list_categories import (
@@ -16,25 +14,20 @@ from src.application.use_cases.catalog.read_list_products import (
 )
 from src.application.use_cases.catalog.read_product import ReadProductUseCase
 from src.application.use_cases.catalog.update_category import UpdateCategoryUseCase
-from src.application.use_cases.catalog.update_product import UpdateProductUseCase
 from src.domain.dtos.catalog import (
     CategoryCreateDTO,
     CategoryListQuery,
     CategoryMoveDTO,
     CategoryUpdateDTO,
-    ProductCreateDTO,
     ProductListQuery,
-    ProductUpdateDTO,
 )
 from src.presentation.schemas.catalog import (
     CategoryCreateRequest,
     CategoryMoveRequest,
     CategoryResponse,
     CategoryUpdateRequest,
-    ProductCreateRequest,
     ProductListResponse,
     ProductResponse,
-    ProductUpdateRequest,
 )
 
 router = APIRouter(prefix="/catalog", tags=["catalog"])
@@ -112,17 +105,6 @@ async def move_category(
     return CategoryResponse(**result.model_dump())
 
 
-@router.post("/product", response_model=ProductResponse, status_code=201)
-@inject
-async def create_product(
-    data: ProductCreateRequest,
-    use_case: FromDishka[CreateProductUseCase],
-) -> ProductResponse:
-    """Create a product via the catalog gRPC service."""
-    result = await use_case.execute(ProductCreateDTO(**data.model_dump()))
-    return ProductResponse(**result.model_dump())
-
-
 @router.get("/product/{product_id}", response_model=ProductResponse)
 @inject
 async def read_product(
@@ -150,26 +132,3 @@ async def read_list_products(
         count=result.count,
     )
 
-
-@router.patch("/product/{product_id}", response_model=ProductResponse)
-@inject
-async def update_product(
-    product_id: int,
-    data: ProductUpdateRequest,
-    use_case: FromDishka[UpdateProductUseCase],
-) -> ProductResponse:
-    """Update a product by id."""
-    result = await use_case.execute(
-        product_id, ProductUpdateDTO(**data.model_dump(exclude_none=True))
-    )
-    return ProductResponse(**result.model_dump())
-
-
-@router.delete("/product/{product_id}", status_code=204)
-@inject
-async def delete_product(
-    product_id: int,
-    use_case: FromDishka[DeleteProductUseCase],
-) -> None:
-    """Delete a product by id."""
-    await use_case.execute(product_id)
