@@ -23,7 +23,7 @@ class CategoryIdRequest(_message.Message):
     def __init__(self, category_id: _Optional[int] = ...) -> None: ...
 
 class Product(_message.Message):
-    __slots__ = ("id", "category_id", "title", "description", "price", "stock", "is_active", "created_at", "updated_at")
+    __slots__ = ("id", "category_id", "title", "description", "price", "stock", "is_active", "created_at", "updated_at", "merchant_id")
     ID_FIELD_NUMBER: _ClassVar[int]
     CATEGORY_ID_FIELD_NUMBER: _ClassVar[int]
     TITLE_FIELD_NUMBER: _ClassVar[int]
@@ -33,6 +33,7 @@ class Product(_message.Message):
     IS_ACTIVE_FIELD_NUMBER: _ClassVar[int]
     CREATED_AT_FIELD_NUMBER: _ClassVar[int]
     UPDATED_AT_FIELD_NUMBER: _ClassVar[int]
+    MERCHANT_ID_FIELD_NUMBER: _ClassVar[int]
     id: int
     category_id: int
     title: str
@@ -42,29 +43,34 @@ class Product(_message.Message):
     is_active: bool
     created_at: _timestamp_pb2.Timestamp
     updated_at: _timestamp_pb2.Timestamp
-    def __init__(self, id: _Optional[int] = ..., category_id: _Optional[int] = ..., title: _Optional[str] = ..., description: _Optional[str] = ..., price: _Optional[int] = ..., stock: _Optional[int] = ..., is_active: _Optional[bool] = ..., created_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., updated_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
+    merchant_id: int
+    def __init__(self, id: _Optional[int] = ..., category_id: _Optional[int] = ..., title: _Optional[str] = ..., description: _Optional[str] = ..., price: _Optional[int] = ..., stock: _Optional[int] = ..., is_active: _Optional[bool] = ..., created_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., updated_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., merchant_id: _Optional[int] = ...) -> None: ...
 
 class CreateProductRequest(_message.Message):
-    __slots__ = ("category_id", "title", "description", "price", "stock")
+    __slots__ = ("category_id", "title", "description", "price", "stock", "merchant_id")
     CATEGORY_ID_FIELD_NUMBER: _ClassVar[int]
     TITLE_FIELD_NUMBER: _ClassVar[int]
     DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
     PRICE_FIELD_NUMBER: _ClassVar[int]
     STOCK_FIELD_NUMBER: _ClassVar[int]
+    MERCHANT_ID_FIELD_NUMBER: _ClassVar[int]
     category_id: int
     title: str
     description: str
     price: int
     stock: int
-    def __init__(self, category_id: _Optional[int] = ..., title: _Optional[str] = ..., description: _Optional[str] = ..., price: _Optional[int] = ..., stock: _Optional[int] = ...) -> None: ...
+    merchant_id: int
+    def __init__(self, category_id: _Optional[int] = ..., title: _Optional[str] = ..., description: _Optional[str] = ..., price: _Optional[int] = ..., stock: _Optional[int] = ..., merchant_id: _Optional[int] = ...) -> None: ...
 
 class ListProductsRequest(_message.Message):
-    __slots__ = ("limit", "offset")
+    __slots__ = ("limit", "offset", "merchant_id")
     LIMIT_FIELD_NUMBER: _ClassVar[int]
     OFFSET_FIELD_NUMBER: _ClassVar[int]
+    MERCHANT_ID_FIELD_NUMBER: _ClassVar[int]
     limit: int
     offset: int
-    def __init__(self, limit: _Optional[int] = ..., offset: _Optional[int] = ...) -> None: ...
+    merchant_id: int
+    def __init__(self, limit: _Optional[int] = ..., offset: _Optional[int] = ..., merchant_id: _Optional[int] = ...) -> None: ...
 
 class ListProductsResponse(_message.Message):
     __slots__ = ("products", "count")
@@ -75,7 +81,7 @@ class ListProductsResponse(_message.Message):
     def __init__(self, products: _Optional[_Iterable[_Union[Product, _Mapping]]] = ..., count: _Optional[int] = ...) -> None: ...
 
 class UpdateProductRequest(_message.Message):
-    __slots__ = ("product_id", "category_id", "title", "description", "price", "stock", "is_active")
+    __slots__ = ("product_id", "category_id", "title", "description", "price", "stock", "is_active", "merchant_id")
     PRODUCT_ID_FIELD_NUMBER: _ClassVar[int]
     CATEGORY_ID_FIELD_NUMBER: _ClassVar[int]
     TITLE_FIELD_NUMBER: _ClassVar[int]
@@ -83,6 +89,7 @@ class UpdateProductRequest(_message.Message):
     PRICE_FIELD_NUMBER: _ClassVar[int]
     STOCK_FIELD_NUMBER: _ClassVar[int]
     IS_ACTIVE_FIELD_NUMBER: _ClassVar[int]
+    MERCHANT_ID_FIELD_NUMBER: _ClassVar[int]
     product_id: int
     category_id: int
     title: str
@@ -90,7 +97,16 @@ class UpdateProductRequest(_message.Message):
     price: int
     stock: int
     is_active: bool
-    def __init__(self, product_id: _Optional[int] = ..., category_id: _Optional[int] = ..., title: _Optional[str] = ..., description: _Optional[str] = ..., price: _Optional[int] = ..., stock: _Optional[int] = ..., is_active: _Optional[bool] = ...) -> None: ...
+    merchant_id: int
+    def __init__(self, product_id: _Optional[int] = ..., category_id: _Optional[int] = ..., title: _Optional[str] = ..., description: _Optional[str] = ..., price: _Optional[int] = ..., stock: _Optional[int] = ..., is_active: _Optional[bool] = ..., merchant_id: _Optional[int] = ...) -> None: ...
+
+class DeleteProductRequest(_message.Message):
+    __slots__ = ("product_id", "merchant_id")
+    PRODUCT_ID_FIELD_NUMBER: _ClassVar[int]
+    MERCHANT_ID_FIELD_NUMBER: _ClassVar[int]
+    product_id: int
+    merchant_id: int
+    def __init__(self, product_id: _Optional[int] = ..., merchant_id: _Optional[int] = ...) -> None: ...
 
 class Category(_message.Message):
     __slots__ = ("id", "name", "path", "is_active", "created_at", "updated_at", "parent_id")
