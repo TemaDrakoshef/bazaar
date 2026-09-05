@@ -29,6 +29,7 @@ class CreateProductUseCase:
         logger.info(
             "product.created",
             product_id=response.id,
+            merchant_id=response.merchant_id,
             category_id=response.category_id,
             title=response.title,
         )

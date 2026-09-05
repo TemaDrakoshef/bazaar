@@ -7,6 +7,7 @@ from dishka.integrations.grpcio import FromDishka, inject
 from google.protobuf.empty_pb2 import Empty
 from google.protobuf.timestamp_pb2 import Timestamp
 from grpc import ServicerContext
+from pydantic import ValidationError as PydanticValidationError
 from structlog.contextvars import bind_contextvars, clear_contextvars
 
 from src.application.use_cases.create_category import (
@@ -38,7 +39,7 @@ from src.domain.dtos.product import (
 )
 from src.domain.entities.category import Category
 from src.domain.entities.product import Product
-from src.domain.exceptions import ApplicationError
+from src.domain.exceptions import ApplicationError, ValidationError
 from src.generated.catalog.v1 import catalog_pb2, catalog_pb2_grpc
 
 logger = structlog.get_logger()
@@ -67,6 +68,7 @@ def _to_category(category: Category) -> catalog_pb2.Category:
 def _to_product(product: Product) -> catalog_pb2.Product:
     return catalog_pb2.Product(
         id=product.id,
+        merchant_id=product.merchant_id,
         category_id=product.category_id,
         title=product.title,
         description=product.description,
@@ -88,15 +90,26 @@ def _request_context(**context: object) -> Iterator[None]:
         clear_contextvars()
 
 
-async def _abort(context: ServicerContext, exc: ApplicationError) -> None:
-    """Log a domain error and abort the RPC with its gRPC status."""
+async def _abort(context: ServicerContext, exc: Exception) -> None:
+    """Log a failure and abort the RPC with the matching gRPC status."""
+    if isinstance(exc, PydanticValidationError):
+        error = ValidationError(str(exc.errors()[0].get("msg", "invalid input")))
+    elif isinstance(exc, ApplicationError):
+        error = exc
+    else:
+        logger.exception(
+            "catalog.unhandled_error",
+            error_type=type(exc).__name__,
+            error=repr(exc),
+        )
+        error = ApplicationError()
     logger.warning(
         "catalog.request_failed",
-        error_type=type(exc).__name__,
-        grpc_code=exc.grpc_code.name,
-        detail=exc.detail,
+        error_type=type(error).__name__,
+        grpc_code=error.grpc_code.name,
+        detail=error.detail,
     )
-    await context.abort(exc.grpc_code, exc.detail)
+    await context.abort(error.grpc_code, error.detail)
 
 
 class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
@@ -114,6 +127,7 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
                 )
                 result = await create_product(
                     ProductCreateDTO(
+                        merchant_id=request.merchant_id,
                         category_id=request.category_id,
                         title=request.title,
                         description=description,
@@ -121,7 +135,7 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
                         stock=request.stock,
                     )
                 )
-            except ApplicationError as exc:
+            except Exception as exc:
                 await _abort(context, exc)
 
             return _to_product(result)
@@ -150,10 +164,17 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
     ) -> catalog_pb2.ListProductsResponse:
         with _request_context(limit=request.limit, offset=request.offset):
             try:
-                products, count = await read_list_products(
-                    ProductListQueryDTO(limit=request.limit, offset=request.offset)
+                merchant_id = (
+                    request.merchant_id if request.HasField("merchant_id") else None
                 )
-            except ApplicationError as exc:
+                products, count = await read_list_products(
+                    ProductListQueryDTO(
+                        limit=request.limit,
+                        offset=request.offset,
+                        merchant_id=merchant_id,
+                    )
+                )
+            except Exception as exc:
                 await _abort(context, exc)
 
             return catalog_pb2.ListProductsResponse(
@@ -180,6 +201,7 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
                 stock = request.stock if request.HasField("stock") else None
                 is_active = request.is_active if request.HasField("is_active") else None
                 result = await update_product(
+                    request.merchant_id,
                     request.product_id,
                     ProductUpdateDTO(
                         category_id=category_id,
@@ -190,7 +212,7 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
                         is_active=is_active,
                     ),
                 )
-            except ApplicationError as exc:
+            except Exception as exc:
                 await _abort(context, exc)
 
             return _to_product(result)
@@ -198,14 +220,14 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
     @inject
     async def DeleteProduct(
         self,
-        request: catalog_pb2.ProductIdRequest,
+        request: catalog_pb2.DeleteProductRequest,
         context: ServicerContext,
         delete_product: FromDishka[DeleteProductUseCase],
     ) -> Empty:
         with _request_context(product_id=request.product_id):
             try:
-                await delete_product(request.product_id)
-            except ApplicationError as exc:
+                await delete_product(request.merchant_id, request.product_id)
+            except Exception as exc:
                 await _abort(context, exc)
 
             return Empty()
