@@ -57,7 +57,7 @@ class CatalogServiceStub:
                 _registered_method=True)
         self.DeleteProduct = channel.unary_unary(
                 '/catalog.v1.CatalogService/DeleteProduct',
-                request_serializer=catalog_dot_v1_dot_catalog__pb2.ProductIdRequest.SerializeToString,
+                request_serializer=catalog_dot_v1_dot_catalog__pb2.DeleteProductRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
         self.CreateCategory = channel.unary_unary(
@@ -188,7 +188,7 @@ def add_CatalogServiceServicer_to_server(servicer, server):
             ),
             'DeleteProduct': grpc.unary_unary_rpc_method_handler(
                     servicer.DeleteProduct,
-                    request_deserializer=catalog_dot_v1_dot_catalog__pb2.ProductIdRequest.FromString,
+                    request_deserializer=catalog_dot_v1_dot_catalog__pb2.DeleteProductRequest.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
             'CreateCategory': grpc.unary_unary_rpc_method_handler(
@@ -355,7 +355,7 @@ class CatalogService:
             request,
             target,
             '/catalog.v1.CatalogService/DeleteProduct',
-            catalog_dot_v1_dot_catalog__pb2.ProductIdRequest.SerializeToString,
+            catalog_dot_v1_dot_catalog__pb2.DeleteProductRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
             channel_credentials,
