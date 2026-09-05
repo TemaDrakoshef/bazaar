@@ -13,6 +13,12 @@ class Settings(BaseSettings):
     catalog_service_host: str = "catalog_service"
     catalog_service_port: int = 50052
 
+    seller_service_host: str = "seller_service"
+    seller_service_port: int = 50053
+
+    seller_service_host: str = "seller_service"
+    seller_service_port: int = 50053
+
     LOG_LEVEL: str = "INFO"
     ENVIRONMENT: str = "dev"
 
@@ -25,6 +31,10 @@ class Settings(BaseSettings):
     @property
     def catalog_address(self) -> str:
         return f"{self.catalog_service_host}:{self.catalog_service_port}"
+
+    @property
+    def seller_address(self) -> str:
+        return f"{self.seller_service_host}:{self.seller_service_port}"
 
 
 settings = Settings()
