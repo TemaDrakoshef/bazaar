@@ -51,6 +51,7 @@ class FakeCatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
             )
             result = await uc(
                 ProductCreateDTO(
+                    merchant_id=request.merchant_id,
                     category_id=request.category_id,
                     title=request.title,
                     description=description,
@@ -58,7 +59,7 @@ class FakeCatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
                     stock=request.stock,
                 )
             )
-        except ApplicationError as exc:
+        except Exception as exc:
             await self._abort(context, exc)
         return _to_product(result)
 
@@ -74,9 +75,17 @@ class FakeCatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
         uc = ReadListProductsUseCase(self._uow_factory())
         try:
             products, count = await uc(
-                ProductListQueryDTO(limit=request.limit, offset=request.offset)
+                ProductListQueryDTO(
+                    limit=request.limit,
+                    offset=request.offset,
+                    merchant_id=(
+                        request.merchant_id
+                        if request.HasField("merchant_id")
+                        else None
+                    ),
+                )
             )
-        except ApplicationError as exc:
+        except Exception as exc:
             await self._abort(context, exc)
         return catalog_pb2.ListProductsResponse(
             products=[_to_product(product) for product in products], count=count
@@ -96,6 +105,7 @@ class FakeCatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
             stock = request.stock if request.HasField("stock") else None
             is_active = request.is_active if request.HasField("is_active") else None
             result = await uc(
+                request.merchant_id,
                 request.product_id,
                 ProductUpdateDTO(
                     category_id=category_id,
@@ -106,15 +116,15 @@ class FakeCatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
                     is_active=is_active,
                 ),
             )
-        except ApplicationError as exc:
+        except Exception as exc:
             await self._abort(context, exc)
         return _to_product(result)
 
     async def DeleteProduct(self, request, context):
         uc = DeleteProductUseCase(self._uow_factory())
         try:
-            await uc(request.product_id)
-        except ApplicationError as exc:
+            await uc(request.merchant_id, request.product_id)
+        except Exception as exc:
             await self._abort(context, exc)
         return Empty()
 
@@ -228,7 +238,9 @@ async def test_update_product_success_via_grpc():
     )
     try:
         resp = await stub.UpdateProduct(
-            catalog_pb2.UpdateProductRequest(product_id=1, title="updated", price=200)
+            catalog_pb2.UpdateProductRequest(
+                product_id=1, title="updated", price=200, merchant_id=1
+            )
         )
         assert resp.id == 1
         assert resp.title == "updated"
@@ -244,7 +256,7 @@ async def test_update_product_stock_zero_via_grpc():
     )
     try:
         resp = await stub.UpdateProduct(
-            catalog_pb2.UpdateProductRequest(product_id=1, stock=0)
+            catalog_pb2.UpdateProductRequest(product_id=1, stock=0, merchant_id=1)
         )
         assert resp.id == 1
         assert resp.stock == 0
@@ -260,7 +272,7 @@ async def test_update_product_price_zero_via_grpc():
     )
     try:
         resp = await stub.UpdateProduct(
-            catalog_pb2.UpdateProductRequest(product_id=1, price=0)
+            catalog_pb2.UpdateProductRequest(product_id=1, price=0, merchant_id=1)
         )
         assert resp.id == 1
         assert resp.price == 0
@@ -276,7 +288,9 @@ async def test_update_product_is_active_false_via_grpc():
     )
     try:
         resp = await stub.UpdateProduct(
-            catalog_pb2.UpdateProductRequest(product_id=1, is_active=False)
+            catalog_pb2.UpdateProductRequest(
+                product_id=1, is_active=False, merchant_id=1
+            )
         )
         assert resp.id == 1
         assert resp.is_active is False
@@ -287,27 +301,105 @@ async def test_update_product_is_active_false_via_grpc():
 async def test_update_product_nonexistent_aborts_not_found(empty_stub):
     with pytest.raises(grpc.aio.AioRpcError) as exc_info:
         await empty_stub.UpdateProduct(
-            catalog_pb2.UpdateProductRequest(product_id=999, title="updated")
+            catalog_pb2.UpdateProductRequest(
+                product_id=999, title="updated", merchant_id=1
+            )
         )
     assert exc_info.value.code() == grpc.StatusCode.NOT_FOUND
     assert exc_info.value.details() == "999"
+
+
+async def test_update_product_foreign_merchant_denied_via_grpc():
+    product = make_product(id_=1, merchant_id=2, category_id=1)
+    stub, stop = await _serve(lambda: FakeUnitOfWork(products=[product]))
+    try:
+        with pytest.raises(grpc.aio.AioRpcError) as exc_info:
+            await stub.UpdateProduct(
+                catalog_pb2.UpdateProductRequest(
+                    product_id=1, title="hacked", merchant_id=1
+                )
+            )
+        assert exc_info.value.code() == grpc.StatusCode.PERMISSION_DENIED
+        assert (
+            exc_info.value.details() == "product belongs to another merchant"
+        )
+    finally:
+        await stop()
 
 
 async def test_delete_product_success_via_grpc():
     product = make_product(id_=1, category_id=1)
     stub, stop = await _serve(lambda: FakeUnitOfWork(products=[product]))
     try:
-        resp = await stub.DeleteProduct(catalog_pb2.ProductIdRequest(product_id=1))
+        resp = await stub.DeleteProduct(
+            catalog_pb2.DeleteProductRequest(product_id=1, merchant_id=1)
+        )
         assert resp is not None
+    finally:
+        await stop()
+
+
+async def test_delete_product_foreign_merchant_denied_via_grpc():
+    product = make_product(id_=1, merchant_id=2, category_id=1)
+    stub, stop = await _serve(lambda: FakeUnitOfWork(products=[product]))
+    try:
+        with pytest.raises(grpc.aio.AioRpcError) as exc_info:
+            await stub.DeleteProduct(
+                catalog_pb2.DeleteProductRequest(product_id=1, merchant_id=1)
+            )
+        assert exc_info.value.code() == grpc.StatusCode.PERMISSION_DENIED
     finally:
         await stop()
 
 
 async def test_delete_product_nonexistent_aborts_not_found(empty_stub):
     with pytest.raises(grpc.aio.AioRpcError) as exc_info:
-        await empty_stub.DeleteProduct(catalog_pb2.ProductIdRequest(product_id=999))
+        await empty_stub.DeleteProduct(
+            catalog_pb2.DeleteProductRequest(product_id=999, merchant_id=1)
+        )
     assert exc_info.value.code() == grpc.StatusCode.NOT_FOUND
     assert exc_info.value.details() == "999"
+
+
+async def test_create_product_via_grpc():
+    category = make_category(id_=1)
+    stub, stop = await _serve(lambda: FakeUnitOfWork(categories=[category]))
+    try:
+        resp = await stub.CreateProduct(
+            catalog_pb2.CreateProductRequest(
+                merchant_id=5,
+                category_id=1,
+                title="new product",
+                price=150,
+                stock=3,
+            )
+        )
+        assert resp.merchant_id == 5
+        assert resp.title == "new product"
+    finally:
+        await stop()
+
+
+async def test_list_products_filtered_by_merchant_via_grpc():
+    mine = make_product(id_=1, merchant_id=1, category_id=1)
+    foreign = make_product(id_=2, merchant_id=2, category_id=1)
+    stub, stop = await _serve(
+        lambda: FakeUnitOfWork(products=[mine, foreign])
+    )
+    try:
+        resp = await stub.ReadListProducts(
+            catalog_pb2.ListProductsRequest(limit=10, offset=0, merchant_id=1)
+        )
+        assert resp.count == 1
+        assert resp.products[0].id == 1
+        assert resp.products[0].merchant_id == 1
+
+        all_resp = await stub.ReadListProducts(
+            catalog_pb2.ListProductsRequest(limit=10, offset=0)
+        )
+        assert all_resp.count == 2
+    finally:
+        await stop()
 
 
 async def test_create_root_category_via_grpc():

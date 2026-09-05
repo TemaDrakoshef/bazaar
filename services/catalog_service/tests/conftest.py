@@ -26,6 +26,10 @@ class FakeProductRepo:
             )
         ]
 
+    async def get_page(self, offset: int, limit: int, **filters):
+        matched = await self.get_all_by_filter(**filters)
+        return matched[offset : offset + limit]
+
     async def count(self, **filters) -> int:
         return len(await self.get_all_by_filter(**filters))
 
@@ -44,6 +48,16 @@ class FakeProductRepo:
         return None
 
     async def create(self, **values):
+        if "id" not in values or values["id"] is None:
+            values["id"] = max((r.id for r in self.records), default=0) + 1
+        if "is_active" not in values:
+            values["is_active"] = True
+        if "created_at" not in values:
+            import datetime
+
+            values["created_at"] = datetime.datetime.now(datetime.UTC)
+        if "updated_at" not in values:
+            values["updated_at"] = values["created_at"]
         record = types.SimpleNamespace(**values)
         self.records.append(record)
         return record
@@ -132,6 +146,7 @@ class FakeUnitOfWork:
 
 def make_product(
     id_: int = 1,
+    merchant_id: int = 1,
     category_id: int = 1,
     title: str = "product",
     description: str | None = None,
@@ -146,6 +161,7 @@ def make_product(
     now = created_at or datetime.datetime.now(datetime.UTC)
     return types.SimpleNamespace(
         id=id_,
+        merchant_id=merchant_id,
         category_id=category_id,
         title=title,
         description=description,
