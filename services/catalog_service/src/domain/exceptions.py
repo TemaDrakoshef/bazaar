@@ -22,6 +22,11 @@ class ProductNotFoundError(ApplicationError):
     message = "product not found"
 
 
+class ValidationError(ApplicationError):
+    grpc_code = StatusCode.INVALID_ARGUMENT
+    message = "invalid input"
+
+
 class CategoryHasChildrenError(ApplicationError):
     grpc_code = StatusCode.ALREADY_EXISTS
     message = "category has children"
@@ -35,3 +40,8 @@ class CategoryHasProductsError(ApplicationError):
 class CategoryMoveError(ApplicationError):
     grpc_code = StatusCode.INVALID_ARGUMENT
     message = "cannot move category into itself or its descendant"
+
+
+class AccessDeniedError(ApplicationError):
+    grpc_code = StatusCode.PERMISSION_DENIED
+    message = "product belongs to another merchant"

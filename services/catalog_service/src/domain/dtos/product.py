@@ -4,6 +4,7 @@ from src.domain.entities.base import CustomModel
 
 
 class ProductCreateDTO(CustomModel):
+    merchant_id: int = Field(gt=0)
     category_id: int
     title: str = Field(min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=2000)
@@ -23,3 +24,4 @@ class ProductUpdateDTO(CustomModel):
 class ProductListQueryDTO(CustomModel):
     limit: int = 20
     offset: int = 0
+    merchant_id: int | None = None

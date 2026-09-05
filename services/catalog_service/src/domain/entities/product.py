@@ -7,6 +7,7 @@ from src.domain.entities.base import CustomModel
 
 class Product(CustomModel):
     id: int
+    merchant_id: int = Field(gt=0)
     category_id: int
     title: str = Field(min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=2000)
@@ -18,6 +19,7 @@ class Product(CustomModel):
 
 
 class ProductCreate(CustomModel):
+    merchant_id: int = Field(gt=0)
     category_id: int
     title: str = Field(min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=2000)
