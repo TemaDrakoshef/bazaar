@@ -33,6 +33,7 @@ class CategoryListQuery(BaseModel):
 
 
 class ProductCreateDTO(BaseModel):
+    merchant_id: int
     category_id: int
     title: str = Field(min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=2000)
@@ -51,6 +52,7 @@ class ProductUpdateDTO(BaseModel):
 
 class ProductResult(BaseModel):
     id: int
+    merchant_id: int
     category_id: int
     title: str = Field(min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=2000)
@@ -64,6 +66,7 @@ class ProductResult(BaseModel):
 class ProductListQuery(BaseModel):
     limit: int = 20
     offset: int = 0
+    merchant_id: int | None = None
 
 
 class ProductListResult(BaseModel):

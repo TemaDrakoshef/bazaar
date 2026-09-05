@@ -54,8 +54,8 @@ class AbstractCatalogGateway(ABC):
 
     @abstractmethod
     async def update_product(
-        self, product_id: int, data: ProductUpdateDTO
+        self, merchant_id: int, product_id: int, data: ProductUpdateDTO
     ) -> ProductResult: ...
 
     @abstractmethod
-    async def delete_product(self, product_id: int) -> None: ...
+    async def delete_product(self, merchant_id: int, product_id: int) -> None: ...
