@@ -10,6 +10,8 @@ export interface Category {
 
 export interface Product {
   id: number
+  merchant_id: number
+  merchant_name?: string
   category_id: number
   title: string
   description: string | null

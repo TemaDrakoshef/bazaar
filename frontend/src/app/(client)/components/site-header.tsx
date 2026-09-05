@@ -2,10 +2,12 @@
 
 import { LogOut, Search, Store } from "lucide-react"
 import Link from "next/link"
+import { useEffect } from "react"
 
 import { CartSheet } from "@modules/client/cart"
 
 import { useAuthHydrated, useAuthStore } from "@modules/auth"
+import { useSellerStore } from "@modules/sellers"
 
 import { Button } from "@shared/ui/button"
 import { Input } from "@shared/ui/input"
@@ -16,6 +18,23 @@ export function SiteHeader() {
   const email = useAuthStore((state) => state.email)
   const logout = useAuthStore((state) => state.logout)
   const hydrated = useAuthHydrated()
+  const merchantsCount = useSellerStore((state) => state.merchants.length)
+  const hasFetched = useSellerStore((state) => state.hasFetched)
+  const fetchMyMerchants = useSellerStore((state) => state.fetchMyMerchants)
+
+  useEffect(() => {
+    if (hydrated && status === "authenticated" && !hasFetched) {
+      void fetchMyMerchants()
+    }
+  }, [hydrated, status, hasFetched, fetchMyMerchants])
+
+  const sellerHref = !hasFetched
+    ? "/seller"
+    : merchantsCount > 0
+      ? "/seller/inventory"
+      : "/seller/onboarding"
+  const sellerLabel =
+    !hasFetched || merchantsCount > 0 ? "Кабинет продавца" : "Стать продавцом"
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -63,6 +82,17 @@ export function SiteHeader() {
                   </span>
                 </span>
               )}
+              <Button
+                variant="ghost"
+                size="sm"
+                asChild
+                aria-label={sellerLabel}
+              >
+                <Link href={sellerHref}>
+                  <Store className="h-4 w-4" />
+                  <span className="hidden sm:inline">{sellerLabel}</span>
+                </Link>
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"

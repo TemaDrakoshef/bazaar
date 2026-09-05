@@ -1,6 +1,8 @@
 import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
 
+import { useSellerStore } from "@modules/sellers/store/use-seller-store"
+
 import { authService } from "../api/auth.service"
 import type { AuthStatus, AuthTokens, LoginInput, SignUpInput } from "../types"
 
@@ -43,14 +45,16 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: tokens.refresh_token,
         }),
 
-      clearSession: () =>
+      clearSession: () => {
+        useSellerStore.getState().reset()
         set({
           status: "anonymous",
           email: null,
           userId: null,
           accessToken: null,
           refreshToken: null,
-        }),
+        })
+      },
 
       login: async (input) => {
         set({ status: "loading", email: input.email })

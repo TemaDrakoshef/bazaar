@@ -15,4 +15,12 @@ export const API_ENDPOINTS = {
     products: "/v1/catalog/product",
     product: (id: number | string) => `/v1/catalog/product/${id}`,
   },
+  sellers: {
+    create: "/v1/merchants",
+    my: "/v1/merchants/my",
+  },
+  seller: {
+    products: "/v1/seller/products",
+    product: (id: number | string) => `/v1/seller/products/${id}`,
+  },
 } as const

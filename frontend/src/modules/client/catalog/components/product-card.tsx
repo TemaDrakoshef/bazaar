@@ -1,6 +1,6 @@
 "use client"
 
-import { ImageIcon, ShoppingCart } from "lucide-react"
+import { ImageIcon, ShoppingCart, Store } from "lucide-react"
 import Link from "next/link"
 
 import { useCartStore } from "@modules/client/cart/store/use-cart-store"
@@ -49,6 +49,10 @@ export function ProductCard({ product, className }: ProductCardProps) {
         <Badge variant={isInStock ? "secondary" : "destructive"} className="w-fit">
           {isInStock ? "В наличии" : "Нет в наличии"}
         </Badge>
+        <p className="flex items-center gap-1 text-xs text-muted-foreground">
+          <Store className="size-3" />
+          Продавец: {product.merchant_name ?? `Магазин №${product.merchant_id}`}
+        </p>
       </CardHeader>
 
       <CardContent>

@@ -1,4 +1,4 @@
-import { ImageIcon, ShoppingCart } from "lucide-react"
+import { ImageIcon, ShoppingCart, Store } from "lucide-react"
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
@@ -83,6 +83,19 @@ export default async function ProductPage({ params }: ProductPageProps) {
               <Link href="/catalog">В каталог</Link>
             </Button>
           </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Продавец</CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Store className="size-4" />
+              <span>
+                {product.merchant_name ??
+                  `Магазин №${product.merchant_id}`}
+              </span>
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader>

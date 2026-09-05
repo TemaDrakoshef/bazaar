@@ -35,8 +35,17 @@
       "@modules/auth": [
         "./src/modules/auth"
       ],
+      "@modules/auth/*": [
+        "./src/modules/auth/*"
+      ],
       "@modules/client/*": [
         "./src/modules/client/*"
+      ],
+      "@modules/sellers": [
+        "./src/modules/sellers"
+      ],
+      "@modules/sellers/*": [
+        "./src/modules/sellers/*"
       ]
     }
   },
