@@ -86,17 +86,13 @@ def test_delete_category_returns_204(test_client, mock_catalog_gateway):
     mock_catalog_gateway.delete_category.assert_awaited_once_with(1)
 
 
-def test_create_product_returns_mapped_response(test_client, mock_catalog_gateway):
-    mock_catalog_gateway.create_product.return_value = _product()
-
+def test_create_product_removed_maps_to_405(test_client, mock_catalog_gateway):
     resp = test_client.post(
         "/api/v1/catalog/product",
         json={"category_id": 1, "title": "product", "price": 100, "stock": 5},
     )
 
-    assert resp.status_code == 201
-    assert resp.json()["id"] == 1
-    assert resp.json()["title"] == "product"
+    assert resp.status_code == 405
 
 
 def test_read_product_returns_mapped_response(test_client, mock_catalog_gateway):
@@ -119,27 +115,7 @@ def test_read_list_products_returns_mapped_response(test_client, mock_catalog_ga
     assert resp.status_code == 200
     assert resp.json()["count"] == 1
     assert resp.json()["products"][0]["title"] == "product"
-
-
-def test_update_product_returns_mapped_response(test_client, mock_catalog_gateway):
-    mock_catalog_gateway.update_product.return_value = _product()
-
-    resp = test_client.patch(
-        "/api/v1/catalog/product/1", json={"title": "updated", "price": 200}
-    )
-
-    assert resp.status_code == 200
-    assert resp.json()["title"] == "product"
-    mock_catalog_gateway.update_product.assert_awaited_once()
-
-
-def test_delete_product_returns_204(test_client, mock_catalog_gateway):
-    mock_catalog_gateway.delete_product.return_value = None
-
-    resp = test_client.delete("/api/v1/catalog/product/1")
-
-    assert resp.status_code == 204
-    mock_catalog_gateway.delete_product.assert_awaited_once_with(1)
+    assert resp.json()["products"][0]["merchant_id"] == 1
 
 
 def test_read_product_missing_maps_to_404(test_client, mock_catalog_gateway):
@@ -150,20 +126,18 @@ def test_read_product_missing_maps_to_404(test_client, mock_catalog_gateway):
     assert resp.status_code == 404
 
 
-def test_update_product_missing_maps_to_404(test_client, mock_catalog_gateway):
-    mock_catalog_gateway.update_product.side_effect = NotFoundError("product not found")
+def test_update_product_removed_maps_to_405(test_client, mock_catalog_gateway):
+    resp = test_client.patch(
+        "/api/v1/catalog/product/1", json={"title": "updated", "price": 200}
+    )
 
-    resp = test_client.patch("/api/v1/catalog/product/999", json={"title": "updated"})
-
-    assert resp.status_code == 404
+    assert resp.status_code == 405
 
 
-def test_delete_product_missing_maps_to_404(test_client, mock_catalog_gateway):
-    mock_catalog_gateway.delete_product.side_effect = NotFoundError("product not found")
+def test_delete_product_removed_maps_to_405(test_client, mock_catalog_gateway):
+    resp = test_client.delete("/api/v1/catalog/product/1")
 
-    resp = test_client.delete("/api/v1/catalog/product/999")
-
-    assert resp.status_code == 404
+    assert resp.status_code == 405
 
 
 def test_delete_category_with_children_maps_to_409(test_client, mock_catalog_gateway):

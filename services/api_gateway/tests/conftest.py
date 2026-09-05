@@ -35,8 +35,10 @@ from src.domain.dtos.catalog import (
     ProductListResult,
     ProductResult,
 )
+from src.domain.dtos.seller import MerchantResult, VerifyAccessResult
 from src.domain.interfaces.auth_gateway import AbstractAuthGateway
 from src.domain.interfaces.catalog_gateway import AbstractCatalogGateway
+from src.domain.interfaces.seller_gateway import AbstractSellerGateway
 from src.infrastructure.config.settings import Settings
 
 AUTH_SERVICE_DIR = Path(__file__).resolve().parents[3] / "services" / "auth_service"
@@ -54,9 +56,11 @@ class MockGatewayProvider(Provider):
         self,
         auth_gateway: MagicMock,
         catalog_gateway: MagicMock,
+        seller_gateway: MagicMock,
     ) -> None:
         self._auth_gateway = auth_gateway
         self._catalog_gateway = catalog_gateway
+        self._seller_gateway = seller_gateway
         super().__init__()
 
     @provide(scope=Scope.APP, override=True)
@@ -66,6 +70,10 @@ class MockGatewayProvider(Provider):
     @provide(scope=Scope.APP, override=True)
     def provide_catalog_gateway(self) -> AbstractCatalogGateway:
         return self._catalog_gateway
+
+    @provide(scope=Scope.APP, override=True)
+    def provide_seller_gateway(self) -> AbstractSellerGateway:
+        return self._seller_gateway
 
 
 class TestSettingsProvider(Provider):
@@ -101,6 +109,7 @@ def product_result() -> ProductResult:
     now = datetime.now(UTC)
     return ProductResult(
         id=1,
+        merchant_id=1,
         category_id=1,
         title="product",
         description=None,
@@ -109,6 +118,18 @@ def product_result() -> ProductResult:
         is_active=True,
         created_at=now,
         updated_at=now,
+    )
+
+
+def merchant_result() -> MerchantResult:
+    """A ready-to-use :class:`MerchantResult` returned by the mocked seller."""
+    return MerchantResult(
+        id=1,
+        name="shop",
+        inn="7707083893",
+        owner_user_id="user-123",
+        status="ACTIVE",
+        created_at=datetime.now(UTC),
     )
 
 
@@ -166,13 +187,35 @@ def mock_catalog_gateway() -> MagicMock:
 
 
 @pytest.fixture
+def mock_seller_gateway() -> MagicMock:
+    """Mock of :class:`AbstractSellerGateway` with AsyncMock methods.
+
+    ``verify_access`` defaults to allowed; tests reconfigure it (or point it at
+    an :class:`ApplicationError`) to exercise the 403 path.
+    """
+    gateway = MagicMock(spec=AbstractSellerGateway)
+    gateway.create_merchant = AsyncMock(return_value=merchant_result())
+    gateway.list_user_merchants = AsyncMock(return_value=[merchant_result()])
+    gateway.verify_access = AsyncMock(
+        return_value=VerifyAccessResult(allowed=True, role="OWNER")
+    )
+    return gateway
+
+
+@pytest.fixture
 def test_client(
-    mock_auth_gateway: MagicMock, mock_catalog_gateway: MagicMock
+    mock_auth_gateway: MagicMock,
+    mock_catalog_gateway: MagicMock,
+    mock_seller_gateway: MagicMock,
 ) -> TestClient:
     """FastAPI TestClient wired to the mocked gateway ports through dishka."""
     from src.app import create_app
 
-    app = create_app(MockGatewayProvider(mock_auth_gateway, mock_catalog_gateway))
+    app = create_app(
+        MockGatewayProvider(
+            mock_auth_gateway, mock_catalog_gateway, mock_seller_gateway
+        )
+    )
     with TestClient(app) as client:
         yield client
 

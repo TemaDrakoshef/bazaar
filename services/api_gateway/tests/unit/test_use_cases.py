@@ -27,6 +27,9 @@ from src.application.use_cases.catalog.read_list_products import (
 from src.application.use_cases.catalog.read_product import ReadProductUseCase
 from src.application.use_cases.catalog.update_category import UpdateCategoryUseCase
 from src.application.use_cases.catalog.update_product import UpdateProductUseCase
+from src.application.use_cases.seller.create_merchant import CreateMerchantUseCase
+from src.application.use_cases.seller.list_merchants import ListUserMerchantsUseCase
+from src.application.use_cases.seller.verify_access import VerifyAccessUseCase
 from src.domain.dtos.auth import (
     LoginInput,
     LogoutInput,
@@ -42,6 +45,7 @@ from src.domain.dtos.catalog import (
     ProductListQuery,
     ProductUpdateDTO,
 )
+from src.domain.dtos.seller import MerchantCreateInput, VerifyAccessInput
 from src.domain.exceptions import UnavailableError
 
 pytestmark = pytest.mark.unit
@@ -154,7 +158,9 @@ async def test_delete_category_use_case_delegates_to_gateway(mock_catalog_gatewa
 
 
 async def test_create_product_use_case_delegates_to_gateway(mock_catalog_gateway):
-    data = ProductCreateDTO(category_id=1, title="product", price=100, stock=5)
+    data = ProductCreateDTO(
+        merchant_id=1, category_id=1, title="product", price=100, stock=5
+    )
     result = await CreateProductUseCase(mock_catalog_gateway).execute(data)
 
     assert result.id == 1
@@ -180,14 +186,45 @@ async def test_read_list_products_use_case_delegates_to_gateway(
 
 async def test_update_product_use_case_delegates_to_gateway(mock_catalog_gateway):
     data = ProductUpdateDTO(title="updated")
-    result = await UpdateProductUseCase(mock_catalog_gateway).execute(1, data)
+    result = await UpdateProductUseCase(mock_catalog_gateway).execute(1, 1, data)
 
     assert result.id == 1
-    mock_catalog_gateway.update_product.assert_awaited_once_with(1, data)
+    mock_catalog_gateway.update_product.assert_awaited_once_with(1, 1, data)
 
 
 async def test_delete_product_use_case_delegates_to_gateway(mock_catalog_gateway):
-    result = await DeleteProductUseCase(mock_catalog_gateway).execute(1)
+    result = await DeleteProductUseCase(mock_catalog_gateway).execute(1, 1)
 
     assert result is None
-    mock_catalog_gateway.delete_product.assert_awaited_once_with(1)
+    mock_catalog_gateway.delete_product.assert_awaited_once_with(1, 1)
+
+
+async def test_create_merchant_use_case_delegates_to_seller_gateway(
+    mock_seller_gateway,
+):
+    data = MerchantCreateInput(name="shop", inn="7707083893", user_id="user-123")
+    result = await CreateMerchantUseCase(mock_seller_gateway).execute(data)
+
+    assert result.id == 1
+    assert result.status == "ACTIVE"
+    mock_seller_gateway.create_merchant.assert_awaited_once_with(data)
+
+
+async def test_list_merchants_use_case_delegates_to_seller_gateway(
+    mock_seller_gateway,
+):
+    result = await ListUserMerchantsUseCase(mock_seller_gateway).execute("user-123")
+
+    assert result[0].name == "shop"
+    mock_seller_gateway.list_user_merchants.assert_awaited_once_with("user-123")
+
+
+async def test_verify_access_use_case_delegates_to_seller_gateway(
+    mock_seller_gateway,
+):
+    data = VerifyAccessInput(user_id="user-123", merchant_id=1)
+    result = await VerifyAccessUseCase(mock_seller_gateway).execute(data)
+
+    assert result.allowed is True
+    assert result.role == "OWNER"
+    mock_seller_gateway.verify_access.assert_awaited_once_with(data)
