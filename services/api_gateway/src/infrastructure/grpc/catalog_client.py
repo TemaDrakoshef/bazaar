@@ -33,6 +33,7 @@ def _to_category_result(response: catalog_pb2.Category) -> CategoryResult:
 def _to_product_result(response: catalog_pb2.Product) -> ProductResult:
     return ProductResult(
         id=response.id,
+        merchant_id=response.merchant_id,
         category_id=response.category_id,
         title=response.title,
         description=response.description,
@@ -124,6 +125,7 @@ class CatalogClient(AbstractCatalogGateway):
             try:
                 response = await self._stub.CreateProduct(
                     catalog_pb2.CreateProductRequest(
+                        merchant_id=data.merchant_id,
                         category_id=data.category_id,
                         title=data.title,
                         description=data.description or None,
@@ -146,13 +148,14 @@ class CatalogClient(AbstractCatalogGateway):
         return _to_product_result(response)
 
     async def read_list_products(self, query: ProductListQuery) -> ProductListResult:
+        request = catalog_pb2.ListProductsRequest(
+            limit=query.limit, offset=query.offset
+        )
+        if query.merchant_id is not None:
+            request.merchant_id = query.merchant_id
         async with track_grpc_call("catalog", "ReadListProducts"):
             try:
-                response = await self._stub.ReadListProducts(
-                    catalog_pb2.ListProductsRequest(
-                        limit=query.limit, offset=query.offset
-                    )
-                )
+                response = await self._stub.ReadListProducts(request)
             except grpc.aio.AioRpcError as exc:
                 raise translate_grpc_error(exc) from exc
         return ProductListResult(
@@ -161,9 +164,11 @@ class CatalogClient(AbstractCatalogGateway):
         )
 
     async def update_product(
-        self, product_id: int, data: ProductUpdateDTO
+        self, merchant_id: int, product_id: int, data: ProductUpdateDTO
     ) -> ProductResult:
-        request = catalog_pb2.UpdateProductRequest(product_id=product_id)
+        request = catalog_pb2.UpdateProductRequest(
+            product_id=product_id, merchant_id=merchant_id
+        )
         if data.category_id is not None:
             request.category_id = data.category_id
         if data.title is not None:
@@ -183,11 +188,13 @@ class CatalogClient(AbstractCatalogGateway):
                 raise translate_grpc_error(exc) from exc
         return _to_product_result(response)
 
-    async def delete_product(self, product_id: int) -> None:
+    async def delete_product(self, merchant_id: int, product_id: int) -> None:
         async with track_grpc_call("catalog", "DeleteProduct"):
             try:
                 await self._stub.DeleteProduct(
-                    catalog_pb2.ProductIdRequest(product_id=product_id)
+                    catalog_pb2.DeleteProductRequest(
+                        product_id=product_id, merchant_id=merchant_id
+                    )
                 )
             except grpc.aio.AioRpcError as exc:
                 raise translate_grpc_error(exc) from exc
