@@ -18,6 +18,11 @@ class ProductORM(Base):
     __tablename__ = "products"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    merchant_id: Mapped[int] = mapped_column(
+        BigInteger,
+        nullable=False,
+        index=True,
+    )
     category_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("categories.id", ondelete="RESTRICT"),
