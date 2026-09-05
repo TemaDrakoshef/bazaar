@@ -22,12 +22,17 @@ from src.application.use_cases.catalog.read_list_products import (
 from src.application.use_cases.catalog.read_product import ReadProductUseCase
 from src.application.use_cases.catalog.update_category import UpdateCategoryUseCase
 from src.application.use_cases.catalog.update_product import UpdateProductUseCase
+from src.application.use_cases.seller.create_merchant import CreateMerchantUseCase
+from src.application.use_cases.seller.list_merchants import ListUserMerchantsUseCase
+from src.application.use_cases.seller.verify_access import VerifyAccessUseCase
 from src.domain.interfaces.auth_gateway import AbstractAuthGateway
 from src.domain.interfaces.catalog_gateway import AbstractCatalogGateway
+from src.domain.interfaces.seller_gateway import AbstractSellerGateway
 from src.infrastructure.config.settings import Settings
 from src.infrastructure.grpc.auth_client import AuthClient
 from src.infrastructure.grpc.catalog_client import CatalogClient
 from src.infrastructure.grpc.channels import Channels
+from src.infrastructure.grpc.seller_client import SellerClient
 
 
 class ApiGatewayProvider(Provider):
@@ -51,6 +56,10 @@ class ApiGatewayProvider(Provider):
     def provide_catalog_gateway(self, channels: Channels) -> AbstractCatalogGateway:
         return CatalogClient(channels.catalog)
 
+    @provide(scope=Scope.APP)
+    def provide_seller_gateway(self, channels: Channels) -> AbstractSellerGateway:
+        return SellerClient(channels.seller)
+
     @provide(scope=Scope.REQUEST)
     def provide_signup_use_case(self, auth: AbstractAuthGateway) -> SignUpUseCase:
         return SignUpUseCase(auth)
@@ -72,6 +81,24 @@ class ApiGatewayProvider(Provider):
         self, auth: AbstractAuthGateway
     ) -> ValidateTokenUseCase:
         return ValidateTokenUseCase(auth)
+
+    @provide(scope=Scope.REQUEST)
+    def provide_create_merchant_use_case(
+        self, seller: AbstractSellerGateway
+    ) -> CreateMerchantUseCase:
+        return CreateMerchantUseCase(seller)
+
+    @provide(scope=Scope.REQUEST)
+    def provide_list_merchants_use_case(
+        self, seller: AbstractSellerGateway
+    ) -> ListUserMerchantsUseCase:
+        return ListUserMerchantsUseCase(seller)
+
+    @provide(scope=Scope.REQUEST)
+    def provide_verify_access_use_case(
+        self, seller: AbstractSellerGateway
+    ) -> VerifyAccessUseCase:
+        return VerifyAccessUseCase(seller)
 
     @provide(scope=Scope.REQUEST)
     def provide_create_category_use_case(
