@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package seller.v1;
+
+import "google/protobuf/timestamp.proto";
+
+
+service SellerService {
+  rpc CreateMerchant(CreateMerchantRequest) returns (Merchant);
+  rpc GetMerchant(GetMerchantRequest) returns (Merchant);
+  rpc ListUserMerchants(ListUserMerchantsRequest) returns (ListUserMerchantsResponse);
+  rpc VerifyAccess(VerifyAccessRequest) returns (VerifyAccessResponse);
+}
+
+enum MerchantStatus {
+  MERCHANT_STATUS_UNSPECIFIED = 0;
+  MERCHANT_STATUS_ACTIVE = 1;
+  MERCHANT_STATUS_PENDING_VERIFICATION = 2;
+}
+
+enum MerchantRole {
+  MERCHANT_ROLE_UNSPECIFIED = 0;
+  MERCHANT_ROLE_OWNER = 1;
+  MERCHANT_ROLE_MANAGER = 2;
+  MERCHANT_ROLE_VIEWER = 3;
+}
+
+message Merchant {
+  int64 id = 1;
+  string name = 2;
+  string inn = 3;
+  string owner_user_id = 4;
+  MerchantStatus status = 5;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+message MerchantMember {
+  int64 id = 1;
+  int64 merchant_id = 2;
+  string user_id = 3;
+  MerchantRole role = 4;
+  bool is_active = 5;
+}
+
+message CreateMerchantRequest {
+  string name = 1;
+  string inn = 2;
+  string user_id = 3;
+}
+
+message GetMerchantRequest {
+  int64 merchant_id = 1;
+}
+
+message ListUserMerchantsRequest {
+  string user_id = 1;
+}
+
+message ListUserMerchantsResponse {
+  repeated Merchant merchants = 1;
+}
+
+message VerifyAccessRequest {
+  string user_id = 1;
+  int64 merchant_id = 2;
+}
+
+message VerifyAccessResponse {
+  bool allowed = 1;
+  MerchantRole role = 2;
+}
+
+
+
+

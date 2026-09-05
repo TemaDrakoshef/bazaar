@@ -12,7 +12,7 @@ service CatalogService {
   rpc ReadProduct(ProductIdRequest) returns (Product);
   rpc ReadListProducts(ListProductsRequest) returns (ListProductsResponse);
   rpc UpdateProduct(UpdateProductRequest) returns (Product);
-  rpc DeleteProduct(ProductIdRequest) returns (google.protobuf.Empty);
+  rpc DeleteProduct(DeleteProductRequest) returns (google.protobuf.Empty);
 
   // Category CRUD
   rpc CreateCategory(CreateCategoryRequest) returns (Category);
@@ -46,6 +46,8 @@ message Product {
   bool is_active = 7;
   google.protobuf.Timestamp created_at = 8;
   google.protobuf.Timestamp updated_at = 9;
+  // Owning merchant (seller). Cross-service reference, no FK.
+  int64 merchant_id = 10;
 }
 
 message CreateProductRequest {
@@ -54,11 +56,15 @@ message CreateProductRequest {
   optional string description = 3;
   int32 price = 5;
   int32 stock = 6;
+  // Merchant that will own the product.
+  int64 merchant_id = 7;
 }
 
 message ListProductsRequest {
   int32 limit = 1;   // page size, >0
   int32 offset = 2;  // >=0
+  // Optional filter: return only products owned by this merchant.
+  optional int64 merchant_id = 3;
 }
 
 message ListProductsResponse {
@@ -74,6 +80,14 @@ message UpdateProductRequest {
   optional int32 price = 5;
   optional int32 stock = 6;
   optional bool is_active = 7;
+  // Merchant requesting the update; must own the product.
+  int64 merchant_id = 8;
+}
+
+message DeleteProductRequest {
+  int64 product_id = 1;
+  // Merchant requesting the deletion; must own the product.
+  int64 merchant_id = 2;
 }
 
 // category
