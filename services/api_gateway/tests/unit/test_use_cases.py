@@ -13,10 +13,17 @@ from src.application.use_cases.auth.logout import LogoutUseCase
 from src.application.use_cases.auth.refresh import RefreshUseCase
 from src.application.use_cases.auth.signup import SignUpUseCase
 from src.application.use_cases.auth.validate_token import ValidateTokenUseCase
+from src.application.use_cases.catalog.confirm_media_upload import (
+    ConfirmMediaUploadUseCase,
+)
 from src.application.use_cases.catalog.create_category import CreateCategoryUseCase
 from src.application.use_cases.catalog.create_product import CreateProductUseCase
 from src.application.use_cases.catalog.delete_category import DeleteCategoryUseCase
+from src.application.use_cases.catalog.delete_media import DeleteMediaUseCase
 from src.application.use_cases.catalog.delete_product import DeleteProductUseCase
+from src.application.use_cases.catalog.get_media_upload_url import (
+    GetMediaUploadUrlUseCase,
+)
 from src.application.use_cases.catalog.read_category import ReadCategoryUseCase
 from src.application.use_cases.catalog.read_list_categories import (
     ReadListCategoriesUseCase,
@@ -25,6 +32,7 @@ from src.application.use_cases.catalog.read_list_products import (
     ReadListProductsUseCase,
 )
 from src.application.use_cases.catalog.read_product import ReadProductUseCase
+from src.application.use_cases.catalog.reorder_media import ReorderMediaUseCase
 from src.application.use_cases.catalog.update_category import UpdateCategoryUseCase
 from src.application.use_cases.catalog.update_product import UpdateProductUseCase
 from src.application.use_cases.seller.create_merchant import CreateMerchantUseCase
@@ -41,9 +49,14 @@ from src.domain.dtos.catalog import (
     CategoryCreateDTO,
     CategoryListQuery,
     CategoryUpdateDTO,
+    ConfirmMediaUploadInput,
+    DeleteMediaInput,
+    MediaUploadUrlInput,
     ProductCreateDTO,
     ProductListQuery,
+    ProductMediaResult,
     ProductUpdateDTO,
+    ReorderMediaInput,
 )
 from src.domain.dtos.seller import MerchantCreateInput, VerifyAccessInput
 from src.domain.exceptions import UnavailableError
@@ -228,3 +241,54 @@ async def test_verify_access_use_case_delegates_to_seller_gateway(
     assert result.allowed is True
     assert result.role == "OWNER"
     mock_seller_gateway.verify_access.assert_awaited_once_with(data)
+
+
+async def test_get_media_upload_url_use_case_delegates_to_gateway(mock_catalog_gateway):
+    data = MediaUploadUrlInput(
+        product_id=1,
+        merchant_id=1,
+        media_type="IMAGE",
+        content_type="image/jpeg",
+        file_size=1024,
+    )
+    result = await GetMediaUploadUrlUseCase(mock_catalog_gateway).execute(data)
+
+    assert result.upload_url
+    mock_catalog_gateway.get_media_upload_url.assert_awaited_once_with(data)
+
+
+async def test_confirm_media_upload_use_case_delegates_to_gateway(mock_catalog_gateway):
+    data = ConfirmMediaUploadInput(
+        product_id=1,
+        merchant_id=1,
+        media_type="IMAGE",
+        storage_key="products/1/images/abc.jpg",
+        public_url="http://localhost:9000/p.jpg",
+        file_size=1024,
+    )
+    result = await ConfirmMediaUploadUseCase(mock_catalog_gateway).execute(data)
+
+    assert isinstance(result, ProductMediaResult)
+    mock_catalog_gateway.confirm_media_upload.assert_awaited_once_with(data)
+
+
+async def test_delete_media_use_case_delegates_to_gateway(mock_catalog_gateway):
+    data = DeleteMediaInput(product_id=1, merchant_id=1, media_id=5)
+    result = await DeleteMediaUseCase(mock_catalog_gateway).execute(data)
+
+    assert result is None
+    mock_catalog_gateway.delete_media.assert_awaited_once_with(data)
+
+
+async def test_reorder_media_use_case_delegates_to_gateway(mock_catalog_gateway):
+    from src.domain.dtos.catalog import ReorderMediaItemInput
+
+    data = ReorderMediaInput(
+        product_id=1,
+        merchant_id=1,
+        items=[ReorderMediaItemInput(media_id=1, position=0)],
+    )
+    result = await ReorderMediaUseCase(mock_catalog_gateway).execute(data)
+
+    assert result is None
+    mock_catalog_gateway.reorder_media.assert_awaited_once_with(data)

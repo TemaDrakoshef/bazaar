@@ -32,7 +32,9 @@ from fastapi.testclient import TestClient
 from src.domain.dtos.auth import AuthTokens, TokenStatus
 from src.domain.dtos.catalog import (
     CategoryResult,
+    MediaUploadUrlResult,
     ProductListResult,
+    ProductMediaResult,
     ProductResult,
 )
 from src.domain.dtos.seller import MerchantResult, VerifyAccessResult
@@ -104,7 +106,7 @@ def category_result() -> CategoryResult:
     )
 
 
-def product_result() -> ProductResult:
+def product_result(media: list[ProductMediaResult] | None = None) -> ProductResult:
     """A ready-to-use :class:`ProductResult` returned by the mocked catalog."""
     now = datetime.now(UTC)
     return ProductResult(
@@ -118,6 +120,33 @@ def product_result() -> ProductResult:
         is_active=True,
         created_at=now,
         updated_at=now,
+        media=media if media is not None else [],
+    )
+
+
+def product_media_result(**overrides: object) -> ProductMediaResult:
+    """A ready-to-use :class:`ProductMediaResult` returned by the mocked catalog."""
+    values: dict[str, object] = {
+        "id": 1,
+        "product_id": 1,
+        "media_type": "IMAGE",
+        "url": "http://localhost:9000/bazaar-media/products/1/images/img.jpg",
+        "position": 0,
+        "width": None,
+        "height": None,
+        "duration_seconds": None,
+        "file_size": 1024,
+    }
+    values.update(overrides)
+    return ProductMediaResult(**values)
+
+
+def media_upload_url_result() -> MediaUploadUrlResult:
+    """A ready-to-use presigned upload response from the mocked catalog."""
+    return MediaUploadUrlResult(
+        upload_url="https://minio.local/presign/products/1/images/img.jpg",
+        storage_key="products/1/images/img.jpg",
+        public_url="http://localhost:9000/bazaar-media/products/1/images/img.jpg",
     )
 
 
@@ -183,6 +212,10 @@ def mock_catalog_gateway() -> MagicMock:
     )
     gateway.update_product = AsyncMock(return_value=product_result())
     gateway.delete_product = AsyncMock(return_value=None)
+    gateway.get_media_upload_url = AsyncMock(return_value=media_upload_url_result())
+    gateway.confirm_media_upload = AsyncMock(return_value=product_media_result())
+    gateway.delete_media = AsyncMock(return_value=None)
+    gateway.reorder_media = AsyncMock(return_value=None)
     return gateway
 
 
