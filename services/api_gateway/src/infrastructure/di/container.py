@@ -7,10 +7,17 @@ from src.application.use_cases.auth.logout import LogoutUseCase
 from src.application.use_cases.auth.refresh import RefreshUseCase
 from src.application.use_cases.auth.signup import SignUpUseCase
 from src.application.use_cases.auth.validate_token import ValidateTokenUseCase
+from src.application.use_cases.catalog.confirm_media_upload import (
+    ConfirmMediaUploadUseCase,
+)
 from src.application.use_cases.catalog.create_category import CreateCategoryUseCase
 from src.application.use_cases.catalog.create_product import CreateProductUseCase
 from src.application.use_cases.catalog.delete_category import DeleteCategoryUseCase
+from src.application.use_cases.catalog.delete_media import DeleteMediaUseCase
 from src.application.use_cases.catalog.delete_product import DeleteProductUseCase
+from src.application.use_cases.catalog.get_media_upload_url import (
+    GetMediaUploadUrlUseCase,
+)
 from src.application.use_cases.catalog.move_category import MoveCategoryUseCase
 from src.application.use_cases.catalog.read_category import ReadCategoryUseCase
 from src.application.use_cases.catalog.read_list_categories import (
@@ -20,6 +27,7 @@ from src.application.use_cases.catalog.read_list_products import (
     ReadListProductsUseCase,
 )
 from src.application.use_cases.catalog.read_product import ReadProductUseCase
+from src.application.use_cases.catalog.reorder_media import ReorderMediaUseCase
 from src.application.use_cases.catalog.update_category import UpdateCategoryUseCase
 from src.application.use_cases.catalog.update_product import UpdateProductUseCase
 from src.application.use_cases.seller.create_merchant import CreateMerchantUseCase
@@ -165,3 +173,27 @@ class ApiGatewayProvider(Provider):
         self, catalog: AbstractCatalogGateway
     ) -> DeleteProductUseCase:
         return DeleteProductUseCase(catalog)
+
+    @provide(scope=Scope.REQUEST)
+    def provide_get_media_upload_url_use_case(
+        self, catalog: AbstractCatalogGateway
+    ) -> GetMediaUploadUrlUseCase:
+        return GetMediaUploadUrlUseCase(catalog)
+
+    @provide(scope=Scope.REQUEST)
+    def provide_confirm_media_upload_use_case(
+        self, catalog: AbstractCatalogGateway
+    ) -> ConfirmMediaUploadUseCase:
+        return ConfirmMediaUploadUseCase(catalog)
+
+    @provide(scope=Scope.REQUEST)
+    def provide_delete_media_use_case(
+        self, catalog: AbstractCatalogGateway
+    ) -> DeleteMediaUseCase:
+        return DeleteMediaUseCase(catalog)
+
+    @provide(scope=Scope.REQUEST)
+    def provide_reorder_media_use_case(
+        self, catalog: AbstractCatalogGateway
+    ) -> ReorderMediaUseCase:
+        return ReorderMediaUseCase(catalog)

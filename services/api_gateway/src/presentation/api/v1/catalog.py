@@ -131,4 +131,3 @@ async def read_list_products(
         ],
         count=result.count,
     )
-

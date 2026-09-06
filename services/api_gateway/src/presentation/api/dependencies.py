@@ -79,6 +79,4 @@ async def get_current_merchant_context(
     )
     if not result.allowed:
         raise PermissionDeniedError("no access to the requested merchant")
-    return MerchantContext(
-        user_id=user_id, merchant_id=x_merchant_id, role=result.role
-    )
+    return MerchantContext(user_id=user_id, merchant_id=x_merchant_id, role=result.role)

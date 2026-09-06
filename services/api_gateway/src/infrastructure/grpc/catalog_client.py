@@ -6,11 +6,18 @@ from src.domain.dtos.catalog import (
     CategoryMoveDTO,
     CategoryResult,
     CategoryUpdateDTO,
+    ConfirmMediaUploadInput,
+    DeleteMediaInput,
+    MediaType,
+    MediaUploadUrlInput,
+    MediaUploadUrlResult,
     ProductCreateDTO,
     ProductListQuery,
     ProductListResult,
+    ProductMediaResult,
     ProductResult,
     ProductUpdateDTO,
+    ReorderMediaInput,
 )
 from src.domain.interfaces.catalog_gateway import AbstractCatalogGateway
 from src.generated.catalog.v1 import catalog_pb2, catalog_pb2_grpc
@@ -42,7 +49,35 @@ def _to_product_result(response: catalog_pb2.Product) -> ProductResult:
         is_active=response.is_active,
         created_at=response.created_at.ToDatetime(),
         updated_at=response.updated_at.ToDatetime(),
+        media=[_to_product_media_result(media) for media in response.media],
     )
+
+
+def _to_product_media_result(response: catalog_pb2.ProductMedia) -> ProductMediaResult:
+    return ProductMediaResult(
+        id=response.id,
+        product_id=response.product_id,
+        media_type=_from_pb_media_type(response.media_type),
+        url=response.url,
+        position=response.position,
+        width=response.width if response.HasField("width") else None,
+        height=response.height if response.HasField("height") else None,
+        duration_seconds=(
+            response.duration_seconds if response.HasField("duration_seconds") else None
+        ),
+        file_size=response.file_size,
+    )
+
+
+def _from_pb_media_type(value: int) -> MediaType:
+    name = catalog_pb2.MediaType.Name(value)
+    if name == "MEDIA_TYPE_IMAGE":
+        return MediaType.IMAGE
+    return MediaType.VIDEO
+
+
+def _to_pb_media_type(media_type: MediaType) -> int:
+    return int(catalog_pb2.MediaType.Value(f"MEDIA_TYPE_{media_type.value}"))
 
 
 class CatalogClient(AbstractCatalogGateway):
@@ -194,6 +229,83 @@ class CatalogClient(AbstractCatalogGateway):
                 await self._stub.DeleteProduct(
                     catalog_pb2.DeleteProductRequest(
                         product_id=product_id, merchant_id=merchant_id
+                    )
+                )
+            except grpc.aio.AioRpcError as exc:
+                raise translate_grpc_error(exc) from exc
+
+    async def get_media_upload_url(
+        self, data: MediaUploadUrlInput
+    ) -> MediaUploadUrlResult:
+        async with track_grpc_call("catalog", "GetMediaUploadUrl"):
+            try:
+                response = await self._stub.GetMediaUploadUrl(
+                    catalog_pb2.GetMediaUploadUrlRequest(
+                        product_id=data.product_id,
+                        merchant_id=data.merchant_id,
+                        media_type=_to_pb_media_type(data.media_type),
+                        content_type=data.content_type,
+                        file_size=data.file_size,
+                    )
+                )
+            except grpc.aio.AioRpcError as exc:
+                raise translate_grpc_error(exc) from exc
+        return MediaUploadUrlResult(
+            upload_url=response.upload_url,
+            storage_key=response.storage_key,
+            public_url=response.public_url,
+        )
+
+    async def confirm_media_upload(
+        self, data: ConfirmMediaUploadInput
+    ) -> ProductMediaResult:
+        request = catalog_pb2.ConfirmMediaUploadRequest(
+            product_id=data.product_id,
+            merchant_id=data.merchant_id,
+            media_type=_to_pb_media_type(data.media_type),
+            storage_key=data.storage_key,
+            public_url=data.public_url,
+            file_size=data.file_size,
+        )
+        if data.width is not None:
+            request.width = data.width
+        if data.height is not None:
+            request.height = data.height
+        if data.duration_seconds is not None:
+            request.duration_seconds = data.duration_seconds
+        async with track_grpc_call("catalog", "ConfirmMediaUpload"):
+            try:
+                response = await self._stub.ConfirmMediaUpload(request)
+            except grpc.aio.AioRpcError as exc:
+                raise translate_grpc_error(exc) from exc
+        return _to_product_media_result(response)
+
+    async def delete_media(self, data: DeleteMediaInput) -> None:
+        async with track_grpc_call("catalog", "DeleteMedia"):
+            try:
+                await self._stub.DeleteMedia(
+                    catalog_pb2.DeleteMediaRequest(
+                        product_id=data.product_id,
+                        merchant_id=data.merchant_id,
+                        media_id=data.media_id,
+                    )
+                )
+            except grpc.aio.AioRpcError as exc:
+                raise translate_grpc_error(exc) from exc
+
+    async def reorder_media(self, data: ReorderMediaInput) -> None:
+        async with track_grpc_call("catalog", "ReorderMedia"):
+            try:
+                await self._stub.ReorderMedia(
+                    catalog_pb2.ReorderMediaRequest(
+                        product_id=data.product_id,
+                        merchant_id=data.merchant_id,
+                        items=[
+                            catalog_pb2.ReorderMediaItem(
+                                media_id=item.media_id, position=item.position
+                            )
+                            for item in data.items
+                        ],
                     )
                 )
             except grpc.aio.AioRpcError as exc:
