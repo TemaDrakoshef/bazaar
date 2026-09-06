@@ -45,3 +45,18 @@ class CategoryMoveError(ApplicationError):
 class AccessDeniedError(ApplicationError):
     grpc_code = StatusCode.PERMISSION_DENIED
     message = "product belongs to another merchant"
+
+
+class MediaValidationError(ApplicationError):
+    grpc_code = StatusCode.INVALID_ARGUMENT
+    message = "invalid media"
+
+
+class VideoAlreadyExistsError(ApplicationError):
+    grpc_code = StatusCode.ALREADY_EXISTS
+    message = "video already exists for this product"
+
+
+class MediaNotFoundError(ApplicationError):
+    grpc_code = StatusCode.NOT_FOUND
+    message = "media not found"

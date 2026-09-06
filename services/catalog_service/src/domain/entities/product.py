@@ -3,6 +3,7 @@ from datetime import datetime
 from pydantic import Field
 
 from src.domain.entities.base import CustomModel
+from src.domain.entities.media import ProductMedia
 
 
 class Product(CustomModel):
@@ -16,6 +17,7 @@ class Product(CustomModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime
+    media: list[ProductMedia] = Field(default_factory=list)
 
 
 class ProductCreate(CustomModel):
