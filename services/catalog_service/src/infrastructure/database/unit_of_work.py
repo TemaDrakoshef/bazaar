@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.interfaces.unit_of_work import AbstractUnitOfWork
 from src.infrastructure.database.repositories.category import CategoryRepository
+from src.infrastructure.database.repositories.media import MediaRepository
 from src.infrastructure.database.repositories.product import ProductRepository
 
 
@@ -14,6 +15,7 @@ class SQLAlchemyUnitOfWork(AbstractUnitOfWork):
     async def __aenter__(self) -> "SQLAlchemyUnitOfWork":
         self.product = ProductRepository(self._session)
         self.category = CategoryRepository(self._session)
+        self.media = MediaRepository(self._session)
         return self
 
     async def __aexit__(
