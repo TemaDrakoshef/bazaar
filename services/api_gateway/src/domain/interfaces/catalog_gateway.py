@@ -6,11 +6,17 @@ from src.domain.dtos.catalog import (
     CategoryMoveDTO,
     CategoryResult,
     CategoryUpdateDTO,
+    ConfirmMediaUploadInput,
+    DeleteMediaInput,
+    MediaUploadUrlInput,
+    MediaUploadUrlResult,
     ProductCreateDTO,
     ProductListQuery,
     ProductListResult,
+    ProductMediaResult,
     ProductResult,
     ProductUpdateDTO,
+    ReorderMediaInput,
 )
 
 
@@ -59,3 +65,19 @@ class AbstractCatalogGateway(ABC):
 
     @abstractmethod
     async def delete_product(self, merchant_id: int, product_id: int) -> None: ...
+
+    @abstractmethod
+    async def get_media_upload_url(
+        self, data: MediaUploadUrlInput
+    ) -> MediaUploadUrlResult: ...
+
+    @abstractmethod
+    async def confirm_media_upload(
+        self, data: ConfirmMediaUploadInput
+    ) -> ProductMediaResult: ...
+
+    @abstractmethod
+    async def delete_media(self, data: DeleteMediaInput) -> None: ...
+
+    @abstractmethod
+    async def reorder_media(self, data: ReorderMediaInput) -> None: ...

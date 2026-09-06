@@ -3,6 +3,18 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 
+class MediaResponse(BaseModel):
+    id: int
+    product_id: int
+    media_type: str
+    url: str
+    position: int
+    width: int | None = None
+    height: int | None = None
+    duration_seconds: int | None = None
+    file_size: int
+
+
 class ProductResponse(BaseModel):
     id: int
     merchant_id: int
@@ -14,6 +26,7 @@ class ProductResponse(BaseModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime
+    media: list[MediaResponse] = Field(default_factory=list)
 
 
 class ProductCreateRequest(BaseModel):

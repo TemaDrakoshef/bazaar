@@ -37,6 +37,11 @@ class ConflictError(ApplicationError):
     message = "conflict"
 
 
+class MediaUploadConflictError(ApplicationError):
+    http_code = 400
+    message = "media upload conflict"
+
+
 class UnavailableError(ApplicationError):
     http_code = 503
     message = "upstream service unavailable"
