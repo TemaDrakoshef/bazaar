@@ -142,9 +142,7 @@ class SellerServiceHandler(seller_pb2_grpc.SellerServiceServicer):
         context: ServicerContext,
         verify_access: FromDishka[VerifyAccessUseCase],
     ) -> seller_pb2.VerifyAccessResponse:
-        with _request_context(
-            user_id=request.user_id, merchant_id=request.merchant_id
-        ):
+        with _request_context(user_id=request.user_id, merchant_id=request.merchant_id):
             result = await verify_access(
                 VerifyAccessDTO(
                     user_id=request.user_id, merchant_id=request.merchant_id

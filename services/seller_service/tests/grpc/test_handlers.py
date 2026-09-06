@@ -62,9 +62,12 @@ class FakeSellerServiceHandler(seller_pb2_grpc.SellerServiceServicer):
         )
         return seller_pb2.VerifyAccessResponse(
             allowed=result.allowed,
-            role=seller_pb2.MERCHANT_ROLE_MANAGER if result.role == "MANAGER"
-            else seller_pb2.MERCHANT_ROLE_OWNER if result.role == "OWNER"
-            else seller_pb2.MERCHANT_ROLE_VIEWER if result.role == "VIEWER"
+            role=seller_pb2.MERCHANT_ROLE_MANAGER
+            if result.role == "MANAGER"
+            else seller_pb2.MERCHANT_ROLE_OWNER
+            if result.role == "OWNER"
+            else seller_pb2.MERCHANT_ROLE_VIEWER
+            if result.role == "VIEWER"
             else seller_pb2.MERCHANT_ROLE_UNSPECIFIED,
         )
 

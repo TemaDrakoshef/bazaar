@@ -46,9 +46,7 @@ def upgrade() -> None:
         sa.Column("user_id", sa.String(length=36), nullable=False),
         sa.Column("role", sa.String(length=16), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["merchant_id"], ["merchants.id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["merchant_id"], ["merchants.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(
             "merchant_id", "user_id", name="uq_merchant_members_merchant_user"
@@ -77,9 +75,7 @@ def downgrade() -> None:
     """Drop the merchant_members and merchants tables."""
     op.drop_index("ix_merchant_members_user_id", table_name="merchant_members")
     op.drop_index("ix_merchant_members_merchant_id", table_name="merchant_members")
-    op.drop_constraint(
-        "ck_merchant_members_role", "merchant_members", type_="check"
-    )
+    op.drop_constraint("ck_merchant_members_role", "merchant_members", type_="check")
     op.drop_table("merchant_members")
 
     op.drop_index("ix_merchants_owner_user_id", table_name="merchants")
