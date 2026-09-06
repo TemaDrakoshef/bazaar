@@ -8,6 +8,20 @@ export interface Category {
   updated_at: string
 }
 
+export type ProductMediaType = "IMAGE" | "VIDEO"
+
+export interface ProductMedia {
+  id: number
+  product_id: number
+  media_type: ProductMediaType
+  url: string
+  position: number
+  width: number | null
+  height: number | null
+  duration_seconds: number | null
+  file_size: number
+}
+
 export interface Product {
   id: number
   merchant_id: number
@@ -20,6 +34,7 @@ export interface Product {
   is_active: boolean
   created_at: string
   updated_at: string
+  media: ProductMedia[]
 }
 
 export interface ProductListParams {

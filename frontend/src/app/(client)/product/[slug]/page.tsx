@@ -1,9 +1,14 @@
-import { ImageIcon, ShoppingCart, Store } from "lucide-react"
+import { ShoppingCart, Store } from "lucide-react"
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
-import { catalogService, ProductJsonLd, type Product } from "@modules/client/catalog"
+import {
+  catalogService,
+  ProductGallery,
+  ProductJsonLd,
+  type Product,
+} from "@modules/client/catalog"
 
 import { formatPrice, productIdFromSlug } from "@shared/lib/utils"
 import { Badge } from "@shared/ui/badge"
@@ -56,9 +61,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <ProductJsonLd product={product} />
 
       <div className="grid gap-10 lg:grid-cols-2">
-        <div className="flex aspect-square items-center justify-center rounded-lg border bg-muted">
-          <ImageIcon className="h-16 w-16 text-muted-foreground/50" />
-        </div>
+        <ProductGallery media={product.media} />
 
         <div className="space-y-6">
           <Badge variant={product.stock > 0 ? "secondary" : "destructive"}>

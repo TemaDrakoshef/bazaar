@@ -1,7 +1,7 @@
 "use client"
 
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { Trash2 } from "lucide-react"
+import { ImagePlus, Trash2 } from "lucide-react"
 import { useState } from "react"
 
 import { catalogService } from "@modules/client/catalog"
@@ -20,6 +20,7 @@ import {
 } from "@shared/ui/table"
 
 import { sellerService } from "../api/seller.service"
+import { ProductMediaSheet } from "../components/media-sheet"
 import { SELLER_PRODUCTS_KEY, useSellerStore } from "../store/use-seller-store"
 import type { SellerProduct } from "../types"
 
@@ -63,6 +64,7 @@ export function ProductTable() {
   }
   const page = pagination.page
   const offset = page * PAGE_SIZE
+  const [mediaProduct, setMediaProduct] = useState<SellerProduct | null>(null)
 
   const productsQuery = useQuery({
     queryKey: [SELLER_PRODUCTS_KEY, selectedMerchantId, page],
@@ -117,6 +119,7 @@ export function ProductTable() {
             <TableHead>Цена</TableHead>
             <TableHead>Остаток</TableHead>
             <TableHead>Статус</TableHead>
+            <TableHead className="w-14 text-center">Медиа</TableHead>
             <TableHead className="w-20 text-right">Действия</TableHead>
           </TableRow>
         </TableHeader>
@@ -124,7 +127,7 @@ export function ProductTable() {
           {products.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={7}
+                colSpan={8}
                 className="h-24 text-center text-muted-foreground"
               >
                 {productsQuery.isLoading
@@ -154,6 +157,16 @@ export function ProductTable() {
                     {product.is_active ? "Активен" : "Скрыт"}
                   </Badge>
                 </TableCell>
+                <TableCell className="text-center">
+                  <Button
+                    size="icon-xs"
+                    variant="ghost"
+                    aria-label={`Медиа товара ${product.title}`}
+                    onClick={() => setMediaProduct(product)}
+                  >
+                    <ImagePlus className="size-4" />
+                  </Button>
+                </TableCell>
                 <TableCell className="text-right">
                   <Button
                     size="icon-xs"
@@ -170,6 +183,16 @@ export function ProductTable() {
           )}
         </TableBody>
       </Table>
+
+      <ProductMediaSheet
+        key={mediaProduct?.id ?? 0}
+        product={mediaProduct}
+        onOpenChange={(open) => {
+          if (!open) {
+            setMediaProduct(null)
+          }
+        }}
+      />
 
       {totalPages > 1 && (
         <div className="flex items-center justify-end gap-2">

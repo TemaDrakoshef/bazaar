@@ -22,5 +22,15 @@ export const API_ENDPOINTS = {
   seller: {
     products: "/v1/seller/products",
     product: (id: number | string) => `/v1/seller/products/${id}`,
+    media: {
+      uploadUrl: (productId: number | string) =>
+        `/v1/seller/products/${productId}/media/upload-url`,
+      confirm: (productId: number | string) =>
+        `/v1/seller/products/${productId}/media/confirm`,
+      item: (productId: number | string, mediaId: number | string) =>
+        `/v1/seller/products/${productId}/media/${mediaId}`,
+      reorder: (productId: number | string) =>
+        `/v1/seller/products/${productId}/media/reorder`,
+    },
   },
 } as const

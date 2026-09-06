@@ -10,11 +10,19 @@ export {
   useSellerStore,
 } from "./store/use-seller-store"
 
+export { MediaGallery } from "./components/media-gallery"
+export { MediaUploader } from "./components/media-uploader"
+
 export type {
+  ConfirmMediaUploadPayload,
   CreateMerchantPayload,
   CreateProductPayload,
+  MediaUploadTicket,
   Merchant,
   MerchantStatus,
+  ProductMedia,
+  ProductMediaType,
+  ReorderMediaItem,
   SellerProduct,
   SellerProductListParams,
   SellerProductListResult,
