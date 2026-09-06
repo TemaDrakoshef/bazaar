@@ -79,9 +79,7 @@ class FakeCatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
                     limit=request.limit,
                     offset=request.offset,
                     merchant_id=(
-                        request.merchant_id
-                        if request.HasField("merchant_id")
-                        else None
+                        request.merchant_id if request.HasField("merchant_id") else None
                     ),
                 )
             )
@@ -320,9 +318,7 @@ async def test_update_product_foreign_merchant_denied_via_grpc():
                 )
             )
         assert exc_info.value.code() == grpc.StatusCode.PERMISSION_DENIED
-        assert (
-            exc_info.value.details() == "product belongs to another merchant"
-        )
+        assert exc_info.value.details() == "product belongs to another merchant"
     finally:
         await stop()
 
@@ -383,9 +379,7 @@ async def test_create_product_via_grpc():
 async def test_list_products_filtered_by_merchant_via_grpc():
     mine = make_product(id_=1, merchant_id=1, category_id=1)
     foreign = make_product(id_=2, merchant_id=2, category_id=1)
-    stub, stop = await _serve(
-        lambda: FakeUnitOfWork(products=[mine, foreign])
-    )
+    stub, stop = await _serve(lambda: FakeUnitOfWork(products=[mine, foreign]))
     try:
         resp = await stub.ReadListProducts(
             catalog_pb2.ListProductsRequest(limit=10, offset=0, merchant_id=1)
