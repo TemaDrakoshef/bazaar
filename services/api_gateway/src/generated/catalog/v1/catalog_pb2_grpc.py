@@ -60,6 +60,26 @@ class CatalogServiceStub:
                 request_serializer=catalog_dot_v1_dot_catalog__pb2.DeleteProductRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
+        self.GetMediaUploadUrl = channel.unary_unary(
+                '/catalog.v1.CatalogService/GetMediaUploadUrl',
+                request_serializer=catalog_dot_v1_dot_catalog__pb2.GetMediaUploadUrlRequest.SerializeToString,
+                response_deserializer=catalog_dot_v1_dot_catalog__pb2.GetMediaUploadUrlResponse.FromString,
+                _registered_method=True)
+        self.ConfirmMediaUpload = channel.unary_unary(
+                '/catalog.v1.CatalogService/ConfirmMediaUpload',
+                request_serializer=catalog_dot_v1_dot_catalog__pb2.ConfirmMediaUploadRequest.SerializeToString,
+                response_deserializer=catalog_dot_v1_dot_catalog__pb2.ProductMedia.FromString,
+                _registered_method=True)
+        self.DeleteMedia = channel.unary_unary(
+                '/catalog.v1.CatalogService/DeleteMedia',
+                request_serializer=catalog_dot_v1_dot_catalog__pb2.DeleteMediaRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+        self.ReorderMedia = channel.unary_unary(
+                '/catalog.v1.CatalogService/ReorderMedia',
+                request_serializer=catalog_dot_v1_dot_catalog__pb2.ReorderMediaRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
         self.CreateCategory = channel.unary_unary(
                 '/catalog.v1.CatalogService/CreateCategory',
                 request_serializer=catalog_dot_v1_dot_catalog__pb2.CreateCategoryRequest.SerializeToString,
@@ -121,6 +141,31 @@ class CatalogServiceServicer:
         raise NotImplementedError('Method not implemented!')
 
     def DeleteProduct(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetMediaUploadUrl(self, request, context):
+        """Product media
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ConfirmMediaUpload(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DeleteMedia(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ReorderMedia(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -189,6 +234,26 @@ def add_CatalogServiceServicer_to_server(servicer, server):
             'DeleteProduct': grpc.unary_unary_rpc_method_handler(
                     servicer.DeleteProduct,
                     request_deserializer=catalog_dot_v1_dot_catalog__pb2.DeleteProductRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'GetMediaUploadUrl': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetMediaUploadUrl,
+                    request_deserializer=catalog_dot_v1_dot_catalog__pb2.GetMediaUploadUrlRequest.FromString,
+                    response_serializer=catalog_dot_v1_dot_catalog__pb2.GetMediaUploadUrlResponse.SerializeToString,
+            ),
+            'ConfirmMediaUpload': grpc.unary_unary_rpc_method_handler(
+                    servicer.ConfirmMediaUpload,
+                    request_deserializer=catalog_dot_v1_dot_catalog__pb2.ConfirmMediaUploadRequest.FromString,
+                    response_serializer=catalog_dot_v1_dot_catalog__pb2.ProductMedia.SerializeToString,
+            ),
+            'DeleteMedia': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteMedia,
+                    request_deserializer=catalog_dot_v1_dot_catalog__pb2.DeleteMediaRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'ReorderMedia': grpc.unary_unary_rpc_method_handler(
+                    servicer.ReorderMedia,
+                    request_deserializer=catalog_dot_v1_dot_catalog__pb2.ReorderMediaRequest.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
             'CreateCategory': grpc.unary_unary_rpc_method_handler(
@@ -356,6 +421,114 @@ class CatalogService:
             target,
             '/catalog.v1.CatalogService/DeleteProduct',
             catalog_dot_v1_dot_catalog__pb2.DeleteProductRequest.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetMediaUploadUrl(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/catalog.v1.CatalogService/GetMediaUploadUrl',
+            catalog_dot_v1_dot_catalog__pb2.GetMediaUploadUrlRequest.SerializeToString,
+            catalog_dot_v1_dot_catalog__pb2.GetMediaUploadUrlResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ConfirmMediaUpload(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/catalog.v1.CatalogService/ConfirmMediaUpload',
+            catalog_dot_v1_dot_catalog__pb2.ConfirmMediaUploadRequest.SerializeToString,
+            catalog_dot_v1_dot_catalog__pb2.ProductMedia.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DeleteMedia(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/catalog.v1.CatalogService/DeleteMedia',
+            catalog_dot_v1_dot_catalog__pb2.DeleteMediaRequest.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ReorderMedia(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/catalog.v1.CatalogService/ReorderMedia',
+            catalog_dot_v1_dot_catalog__pb2.ReorderMediaRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
             channel_credentials,

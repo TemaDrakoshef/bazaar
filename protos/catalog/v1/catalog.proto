@@ -14,6 +14,12 @@ service CatalogService {
   rpc UpdateProduct(UpdateProductRequest) returns (Product);
   rpc DeleteProduct(DeleteProductRequest) returns (google.protobuf.Empty);
 
+  // Product media
+  rpc GetMediaUploadUrl(GetMediaUploadUrlRequest) returns (GetMediaUploadUrlResponse);
+  rpc ConfirmMediaUpload(ConfirmMediaUploadRequest) returns (ProductMedia);
+  rpc DeleteMedia(DeleteMediaRequest) returns (google.protobuf.Empty);
+  rpc ReorderMedia(ReorderMediaRequest) returns (google.protobuf.Empty);
+
   // Category CRUD
   rpc CreateCategory(CreateCategoryRequest) returns (Category);
   rpc ReadCategory(CategoryIdRequest) returns (Category);
@@ -48,6 +54,8 @@ message Product {
   google.protobuf.Timestamp updated_at = 9;
   // Owning merchant (seller). Cross-service reference, no FK.
   int64 merchant_id = 10;
+  // Gallery media (images and the single video), ordered by position.
+  repeated ProductMedia media = 11;
 }
 
 message CreateProductRequest {
@@ -122,4 +130,67 @@ message UpdateCategoryRequest {
 message MoveCategoryRequest {
   int64 category_id = 1;
   optional int64 parent_id = 2;
+}
+
+// media
+
+enum MediaType {
+  MEDIA_TYPE_UNSPECIFIED = 0;
+  MEDIA_TYPE_IMAGE = 1;
+  MEDIA_TYPE_VIDEO = 2;
+}
+
+message ProductMedia {
+  int64 id = 1;
+  int64 product_id = 2;
+  MediaType media_type = 3;
+  string url = 4;
+  int32 position = 5;
+  optional int32 width = 6;
+  optional int32 height = 7;
+  optional int32 duration_seconds = 8;
+  int64 file_size = 9;
+}
+
+message GetMediaUploadUrlRequest {
+  int64 product_id = 1;
+  int64 merchant_id = 2;
+  MediaType media_type = 3;
+  string content_type = 4;
+  int64 file_size = 5;
+}
+
+message GetMediaUploadUrlResponse {
+  string upload_url = 1;
+  string storage_key = 2;
+  string public_url = 3;
+}
+
+message ConfirmMediaUploadRequest {
+  int64 product_id = 1;
+  int64 merchant_id = 2;
+  MediaType media_type = 3;
+  string storage_key = 4;
+  string public_url = 5;
+  int64 file_size = 6;
+  optional int32 width = 7;
+  optional int32 height = 8;
+  optional int32 duration_seconds = 9;
+}
+
+message DeleteMediaRequest {
+  int64 product_id = 1;
+  int64 merchant_id = 2;
+  int64 media_id = 3;
+}
+
+message ReorderMediaItem {
+  int64 media_id = 1;
+  int32 position = 2;
+}
+
+message ReorderMediaRequest {
+  int64 product_id = 1;
+  int64 merchant_id = 2;
+  repeated ReorderMediaItem items = 3;
 }

@@ -26,41 +26,57 @@ from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x18\x63\x61talog/v1/catalog.proto\x12\ncatalog.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1bgoogle/protobuf/empty.proto\"&\n\x10ProductIdRequest\x12\x12\n\nproduct_id\x18\x01 \x01(\x03\"(\n\x11\x43\x61tegoryIdRequest\x12\x13\n\x0b\x63\x61tegory_id\x18\x01 \x01(\x03\"\x89\x02\n\x07Product\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x13\n\x0b\x63\x61tegory_id\x18\x02 \x01(\x03\x12\r\n\x05title\x18\x03 \x01(\t\x12\x18\n\x0b\x64\x65scription\x18\x04 \x01(\tH\x00\x88\x01\x01\x12\r\n\x05price\x18\x05 \x01(\x05\x12\r\n\x05stock\x18\x06 \x01(\x05\x12\x11\n\tis_active\x18\x07 \x01(\x08\x12.\n\ncreated_at\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\nupdated_at\x18\t \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x13\n\x0bmerchant_id\x18\n \x01(\x03\x42\x0e\n\x0c_description\"\x97\x01\n\x14\x43reateProductRequest\x12\x13\n\x0b\x63\x61tegory_id\x18\x01 \x01(\x03\x12\r\n\x05title\x18\x02 \x01(\t\x12\x18\n\x0b\x64\x65scription\x18\x03 \x01(\tH\x00\x88\x01\x01\x12\r\n\x05price\x18\x05 \x01(\x05\x12\r\n\x05stock\x18\x06 \x01(\x05\x12\x13\n\x0bmerchant_id\x18\x07 \x01(\x03\x42\x0e\n\x0c_description\"^\n\x13ListProductsRequest\x12\r\n\x05limit\x18\x01 \x01(\x05\x12\x0e\n\x06offset\x18\x02 \x01(\x05\x12\x18\n\x0bmerchant_id\x18\x03 \x01(\x03H\x00\x88\x01\x01\x42\x0e\n\x0c_merchant_id\"L\n\x14ListProductsResponse\x12%\n\x08products\x18\x01 \x03(\x0b\x32\x13.catalog.v1.Product\x12\r\n\x05\x63ount\x18\x02 \x01(\x03\"\x93\x02\n\x14UpdateProductRequest\x12\x12\n\nproduct_id\x18\x01 \x01(\x03\x12\x18\n\x0b\x63\x61tegory_id\x18\x02 \x01(\x03H\x00\x88\x01\x01\x12\x12\n\x05title\x18\x03 \x01(\tH\x01\x88\x01\x01\x12\x18\n\x0b\x64\x65scription\x18\x04 \x01(\tH\x02\x88\x01\x01\x12\x12\n\x05price\x18\x05 \x01(\x05H\x03\x88\x01\x01\x12\x12\n\x05stock\x18\x06 \x01(\x05H\x04\x88\x01\x01\x12\x16\n\tis_active\x18\x07 \x01(\x08H\x05\x88\x01\x01\x12\x13\n\x0bmerchant_id\x18\x08 \x01(\x03\x42\x0e\n\x0c_category_idB\x08\n\x06_titleB\x0e\n\x0c_descriptionB\x08\n\x06_priceB\x08\n\x06_stockB\x0c\n\n_is_active\"?\n\x14\x44\x65leteProductRequest\x12\x12\n\nproduct_id\x18\x01 \x01(\x03\x12\x13\n\x0bmerchant_id\x18\x02 \x01(\x03\"\xcb\x01\n\x08\x43\x61tegory\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0c\n\x04path\x18\x03 \x01(\t\x12\x11\n\tis_active\x18\x04 \x01(\x08\x12.\n\ncreated_at\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\nupdated_at\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x16\n\tparent_id\x18\x07 \x01(\x03H\x00\x88\x01\x01\x42\x0c\n\n_parent_id\"K\n\x15\x43reateCategoryRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x16\n\tparent_id\x18\x02 \x01(\x03H\x00\x88\x01\x01\x42\x0c\n\n_parent_id\"\x17\n\x15ListCategoriesRequest\"B\n\x16ListCategoriesResponse\x12(\n\ncategories\x18\x01 \x03(\x0b\x32\x14.catalog.v1.Category\"n\n\x15UpdateCategoryRequest\x12\x13\n\x0b\x63\x61tegory_id\x18\x01 \x01(\x03\x12\x11\n\x04name\x18\x02 \x01(\tH\x00\x88\x01\x01\x12\x16\n\tis_active\x18\x04 \x01(\x08H\x01\x88\x01\x01\x42\x07\n\x05_nameB\x0c\n\n_is_active\"P\n\x13MoveCategoryRequest\x12\x13\n\x0b\x63\x61tegory_id\x18\x01 \x01(\x03\x12\x16\n\tparent_id\x18\x02 \x01(\x03H\x00\x88\x01\x01\x42\x0c\n\n_parent_id2\xcc\x06\n\x0e\x43\x61talogService\x12\x46\n\rCreateProduct\x12 .catalog.v1.CreateProductRequest\x1a\x13.catalog.v1.Product\x12@\n\x0bReadProduct\x12\x1c.catalog.v1.ProductIdRequest\x1a\x13.catalog.v1.Product\x12U\n\x10ReadListProducts\x12\x1f.catalog.v1.ListProductsRequest\x1a .catalog.v1.ListProductsResponse\x12\x46\n\rUpdateProduct\x12 .catalog.v1.UpdateProductRequest\x1a\x13.catalog.v1.Product\x12I\n\rDeleteProduct\x12 .catalog.v1.DeleteProductRequest\x1a\x16.google.protobuf.Empty\x12I\n\x0e\x43reateCategory\x12!.catalog.v1.CreateCategoryRequest\x1a\x14.catalog.v1.Category\x12\x43\n\x0cReadCategory\x12\x1d.catalog.v1.CategoryIdRequest\x1a\x14.catalog.v1.Category\x12[\n\x12ReadListCategories\x12!.catalog.v1.ListCategoriesRequest\x1a\".catalog.v1.ListCategoriesResponse\x12I\n\x0eUpdateCategory\x12!.catalog.v1.UpdateCategoryRequest\x1a\x14.catalog.v1.Category\x12G\n\x0e\x44\x65leteCategory\x12\x1d.catalog.v1.CategoryIdRequest\x1a\x16.google.protobuf.Empty\x12\x45\n\x0cMoveCategory\x12\x1f.catalog.v1.MoveCategoryRequest\x1a\x14.catalog.v1.Categoryb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x18\x63\x61talog/v1/catalog.proto\x12\ncatalog.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1bgoogle/protobuf/empty.proto\"&\n\x10ProductIdRequest\x12\x12\n\nproduct_id\x18\x01 \x01(\x03\"(\n\x11\x43\x61tegoryIdRequest\x12\x13\n\x0b\x63\x61tegory_id\x18\x01 \x01(\x03\"\xb2\x02\n\x07Product\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x13\n\x0b\x63\x61tegory_id\x18\x02 \x01(\x03\x12\r\n\x05title\x18\x03 \x01(\t\x12\x18\n\x0b\x64\x65scription\x18\x04 \x01(\tH\x00\x88\x01\x01\x12\r\n\x05price\x18\x05 \x01(\x05\x12\r\n\x05stock\x18\x06 \x01(\x05\x12\x11\n\tis_active\x18\x07 \x01(\x08\x12.\n\ncreated_at\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\nupdated_at\x18\t \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x13\n\x0bmerchant_id\x18\n \x01(\x03\x12\'\n\x05media\x18\x0b \x03(\x0b\x32\x18.catalog.v1.ProductMediaB\x0e\n\x0c_description\"\x97\x01\n\x14\x43reateProductRequest\x12\x13\n\x0b\x63\x61tegory_id\x18\x01 \x01(\x03\x12\r\n\x05title\x18\x02 \x01(\t\x12\x18\n\x0b\x64\x65scription\x18\x03 \x01(\tH\x00\x88\x01\x01\x12\r\n\x05price\x18\x05 \x01(\x05\x12\r\n\x05stock\x18\x06 \x01(\x05\x12\x13\n\x0bmerchant_id\x18\x07 \x01(\x03\x42\x0e\n\x0c_description\"^\n\x13ListProductsRequest\x12\r\n\x05limit\x18\x01 \x01(\x05\x12\x0e\n\x06offset\x18\x02 \x01(\x05\x12\x18\n\x0bmerchant_id\x18\x03 \x01(\x03H\x00\x88\x01\x01\x42\x0e\n\x0c_merchant_id\"L\n\x14ListProductsResponse\x12%\n\x08products\x18\x01 \x03(\x0b\x32\x13.catalog.v1.Product\x12\r\n\x05\x63ount\x18\x02 \x01(\x03\"\x93\x02\n\x14UpdateProductRequest\x12\x12\n\nproduct_id\x18\x01 \x01(\x03\x12\x18\n\x0b\x63\x61tegory_id\x18\x02 \x01(\x03H\x00\x88\x01\x01\x12\x12\n\x05title\x18\x03 \x01(\tH\x01\x88\x01\x01\x12\x18\n\x0b\x64\x65scription\x18\x04 \x01(\tH\x02\x88\x01\x01\x12\x12\n\x05price\x18\x05 \x01(\x05H\x03\x88\x01\x01\x12\x12\n\x05stock\x18\x06 \x01(\x05H\x04\x88\x01\x01\x12\x16\n\tis_active\x18\x07 \x01(\x08H\x05\x88\x01\x01\x12\x13\n\x0bmerchant_id\x18\x08 \x01(\x03\x42\x0e\n\x0c_category_idB\x08\n\x06_titleB\x0e\n\x0c_descriptionB\x08\n\x06_priceB\x08\n\x06_stockB\x0c\n\n_is_active\"?\n\x14\x44\x65leteProductRequest\x12\x12\n\nproduct_id\x18\x01 \x01(\x03\x12\x13\n\x0bmerchant_id\x18\x02 \x01(\x03\"\xcb\x01\n\x08\x43\x61tegory\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0c\n\x04path\x18\x03 \x01(\t\x12\x11\n\tis_active\x18\x04 \x01(\x08\x12.\n\ncreated_at\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\nupdated_at\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x16\n\tparent_id\x18\x07 \x01(\x03H\x00\x88\x01\x01\x42\x0c\n\n_parent_id\"K\n\x15\x43reateCategoryRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x16\n\tparent_id\x18\x02 \x01(\x03H\x00\x88\x01\x01\x42\x0c\n\n_parent_id\"\x17\n\x15ListCategoriesRequest\"B\n\x16ListCategoriesResponse\x12(\n\ncategories\x18\x01 \x03(\x0b\x32\x14.catalog.v1.Category\"n\n\x15UpdateCategoryRequest\x12\x13\n\x0b\x63\x61tegory_id\x18\x01 \x01(\x03\x12\x11\n\x04name\x18\x02 \x01(\tH\x00\x88\x01\x01\x12\x16\n\tis_active\x18\x04 \x01(\x08H\x01\x88\x01\x01\x42\x07\n\x05_nameB\x0c\n\n_is_active\"P\n\x13MoveCategoryRequest\x12\x13\n\x0b\x63\x61tegory_id\x18\x01 \x01(\x03\x12\x16\n\tparent_id\x18\x02 \x01(\x03H\x00\x88\x01\x01\x42\x0c\n\n_parent_id\"\xfd\x01\n\x0cProductMedia\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x12\n\nproduct_id\x18\x02 \x01(\x03\x12)\n\nmedia_type\x18\x03 \x01(\x0e\x32\x15.catalog.v1.MediaType\x12\x0b\n\x03url\x18\x04 \x01(\t\x12\x10\n\x08position\x18\x05 \x01(\x05\x12\x12\n\x05width\x18\x06 \x01(\x05H\x00\x88\x01\x01\x12\x13\n\x06height\x18\x07 \x01(\x05H\x01\x88\x01\x01\x12\x1d\n\x10\x64uration_seconds\x18\x08 \x01(\x05H\x02\x88\x01\x01\x12\x11\n\tfile_size\x18\t \x01(\x03\x42\x08\n\x06_widthB\t\n\x07_heightB\x13\n\x11_duration_seconds\"\x97\x01\n\x18GetMediaUploadUrlRequest\x12\x12\n\nproduct_id\x18\x01 \x01(\x03\x12\x13\n\x0bmerchant_id\x18\x02 \x01(\x03\x12)\n\nmedia_type\x18\x03 \x01(\x0e\x32\x15.catalog.v1.MediaType\x12\x14\n\x0c\x63ontent_type\x18\x04 \x01(\t\x12\x11\n\tfile_size\x18\x05 \x01(\x03\"X\n\x19GetMediaUploadUrlResponse\x12\x12\n\nupload_url\x18\x01 \x01(\t\x12\x13\n\x0bstorage_key\x18\x02 \x01(\t\x12\x12\n\npublic_url\x18\x03 \x01(\t\"\x9d\x02\n\x19\x43onfirmMediaUploadRequest\x12\x12\n\nproduct_id\x18\x01 \x01(\x03\x12\x13\n\x0bmerchant_id\x18\x02 \x01(\x03\x12)\n\nmedia_type\x18\x03 \x01(\x0e\x32\x15.catalog.v1.MediaType\x12\x13\n\x0bstorage_key\x18\x04 \x01(\t\x12\x12\n\npublic_url\x18\x05 \x01(\t\x12\x11\n\tfile_size\x18\x06 \x01(\x03\x12\x12\n\x05width\x18\x07 \x01(\x05H\x00\x88\x01\x01\x12\x13\n\x06height\x18\x08 \x01(\x05H\x01\x88\x01\x01\x12\x1d\n\x10\x64uration_seconds\x18\t \x01(\x05H\x02\x88\x01\x01\x42\x08\n\x06_widthB\t\n\x07_heightB\x13\n\x11_duration_seconds\"O\n\x12\x44\x65leteMediaRequest\x12\x12\n\nproduct_id\x18\x01 \x01(\x03\x12\x13\n\x0bmerchant_id\x18\x02 \x01(\x03\x12\x10\n\x08media_id\x18\x03 \x01(\x03\"6\n\x10ReorderMediaItem\x12\x10\n\x08media_id\x18\x01 \x01(\x03\x12\x10\n\x08position\x18\x02 \x01(\x05\"k\n\x13ReorderMediaRequest\x12\x12\n\nproduct_id\x18\x01 \x01(\x03\x12\x13\n\x0bmerchant_id\x18\x02 \x01(\x03\x12+\n\x05items\x18\x03 \x03(\x0b\x32\x1c.catalog.v1.ReorderMediaItem*S\n\tMediaType\x12\x1a\n\x16MEDIA_TYPE_UNSPECIFIED\x10\x00\x12\x14\n\x10MEDIA_TYPE_IMAGE\x10\x01\x12\x14\n\x10MEDIA_TYPE_VIDEO\x10\x02\x32\x95\t\n\x0e\x43\x61talogService\x12\x46\n\rCreateProduct\x12 .catalog.v1.CreateProductRequest\x1a\x13.catalog.v1.Product\x12@\n\x0bReadProduct\x12\x1c.catalog.v1.ProductIdRequest\x1a\x13.catalog.v1.Product\x12U\n\x10ReadListProducts\x12\x1f.catalog.v1.ListProductsRequest\x1a .catalog.v1.ListProductsResponse\x12\x46\n\rUpdateProduct\x12 .catalog.v1.UpdateProductRequest\x1a\x13.catalog.v1.Product\x12I\n\rDeleteProduct\x12 .catalog.v1.DeleteProductRequest\x1a\x16.google.protobuf.Empty\x12`\n\x11GetMediaUploadUrl\x12$.catalog.v1.GetMediaUploadUrlRequest\x1a%.catalog.v1.GetMediaUploadUrlResponse\x12U\n\x12\x43onfirmMediaUpload\x12%.catalog.v1.ConfirmMediaUploadRequest\x1a\x18.catalog.v1.ProductMedia\x12\x45\n\x0b\x44\x65leteMedia\x12\x1e.catalog.v1.DeleteMediaRequest\x1a\x16.google.protobuf.Empty\x12G\n\x0cReorderMedia\x12\x1f.catalog.v1.ReorderMediaRequest\x1a\x16.google.protobuf.Empty\x12I\n\x0e\x43reateCategory\x12!.catalog.v1.CreateCategoryRequest\x1a\x14.catalog.v1.Category\x12\x43\n\x0cReadCategory\x12\x1d.catalog.v1.CategoryIdRequest\x1a\x14.catalog.v1.Category\x12[\n\x12ReadListCategories\x12!.catalog.v1.ListCategoriesRequest\x1a\".catalog.v1.ListCategoriesResponse\x12I\n\x0eUpdateCategory\x12!.catalog.v1.UpdateCategoryRequest\x1a\x14.catalog.v1.Category\x12G\n\x0e\x44\x65leteCategory\x12\x1d.catalog.v1.CategoryIdRequest\x1a\x16.google.protobuf.Empty\x12\x45\n\x0cMoveCategory\x12\x1f.catalog.v1.MoveCategoryRequest\x1a\x14.catalog.v1.Categoryb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'catalog.v1.catalog_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
+  _globals['_MEDIATYPE']._serialized_start=2768
+  _globals['_MEDIATYPE']._serialized_end=2851
   _globals['_PRODUCTIDREQUEST']._serialized_start=102
   _globals['_PRODUCTIDREQUEST']._serialized_end=140
   _globals['_CATEGORYIDREQUEST']._serialized_start=142
   _globals['_CATEGORYIDREQUEST']._serialized_end=182
   _globals['_PRODUCT']._serialized_start=185
-  _globals['_PRODUCT']._serialized_end=450
-  _globals['_CREATEPRODUCTREQUEST']._serialized_start=453
-  _globals['_CREATEPRODUCTREQUEST']._serialized_end=604
-  _globals['_LISTPRODUCTSREQUEST']._serialized_start=606
-  _globals['_LISTPRODUCTSREQUEST']._serialized_end=700
-  _globals['_LISTPRODUCTSRESPONSE']._serialized_start=702
-  _globals['_LISTPRODUCTSRESPONSE']._serialized_end=778
-  _globals['_UPDATEPRODUCTREQUEST']._serialized_start=781
-  _globals['_UPDATEPRODUCTREQUEST']._serialized_end=1056
-  _globals['_DELETEPRODUCTREQUEST']._serialized_start=1058
-  _globals['_DELETEPRODUCTREQUEST']._serialized_end=1121
-  _globals['_CATEGORY']._serialized_start=1124
-  _globals['_CATEGORY']._serialized_end=1327
-  _globals['_CREATECATEGORYREQUEST']._serialized_start=1329
-  _globals['_CREATECATEGORYREQUEST']._serialized_end=1404
-  _globals['_LISTCATEGORIESREQUEST']._serialized_start=1406
-  _globals['_LISTCATEGORIESREQUEST']._serialized_end=1429
-  _globals['_LISTCATEGORIESRESPONSE']._serialized_start=1431
-  _globals['_LISTCATEGORIESRESPONSE']._serialized_end=1497
-  _globals['_UPDATECATEGORYREQUEST']._serialized_start=1499
-  _globals['_UPDATECATEGORYREQUEST']._serialized_end=1609
-  _globals['_MOVECATEGORYREQUEST']._serialized_start=1611
-  _globals['_MOVECATEGORYREQUEST']._serialized_end=1691
-  _globals['_CATALOGSERVICE']._serialized_start=1694
-  _globals['_CATALOGSERVICE']._serialized_end=2538
+  _globals['_PRODUCT']._serialized_end=491
+  _globals['_CREATEPRODUCTREQUEST']._serialized_start=494
+  _globals['_CREATEPRODUCTREQUEST']._serialized_end=645
+  _globals['_LISTPRODUCTSREQUEST']._serialized_start=647
+  _globals['_LISTPRODUCTSREQUEST']._serialized_end=741
+  _globals['_LISTPRODUCTSRESPONSE']._serialized_start=743
+  _globals['_LISTPRODUCTSRESPONSE']._serialized_end=819
+  _globals['_UPDATEPRODUCTREQUEST']._serialized_start=822
+  _globals['_UPDATEPRODUCTREQUEST']._serialized_end=1097
+  _globals['_DELETEPRODUCTREQUEST']._serialized_start=1099
+  _globals['_DELETEPRODUCTREQUEST']._serialized_end=1162
+  _globals['_CATEGORY']._serialized_start=1165
+  _globals['_CATEGORY']._serialized_end=1368
+  _globals['_CREATECATEGORYREQUEST']._serialized_start=1370
+  _globals['_CREATECATEGORYREQUEST']._serialized_end=1445
+  _globals['_LISTCATEGORIESREQUEST']._serialized_start=1447
+  _globals['_LISTCATEGORIESREQUEST']._serialized_end=1470
+  _globals['_LISTCATEGORIESRESPONSE']._serialized_start=1472
+  _globals['_LISTCATEGORIESRESPONSE']._serialized_end=1538
+  _globals['_UPDATECATEGORYREQUEST']._serialized_start=1540
+  _globals['_UPDATECATEGORYREQUEST']._serialized_end=1650
+  _globals['_MOVECATEGORYREQUEST']._serialized_start=1652
+  _globals['_MOVECATEGORYREQUEST']._serialized_end=1732
+  _globals['_PRODUCTMEDIA']._serialized_start=1735
+  _globals['_PRODUCTMEDIA']._serialized_end=1988
+  _globals['_GETMEDIAUPLOADURLREQUEST']._serialized_start=1991
+  _globals['_GETMEDIAUPLOADURLREQUEST']._serialized_end=2142
+  _globals['_GETMEDIAUPLOADURLRESPONSE']._serialized_start=2144
+  _globals['_GETMEDIAUPLOADURLRESPONSE']._serialized_end=2232
+  _globals['_CONFIRMMEDIAUPLOADREQUEST']._serialized_start=2235
+  _globals['_CONFIRMMEDIAUPLOADREQUEST']._serialized_end=2520
+  _globals['_DELETEMEDIAREQUEST']._serialized_start=2522
+  _globals['_DELETEMEDIAREQUEST']._serialized_end=2601
+  _globals['_REORDERMEDIAITEM']._serialized_start=2603
+  _globals['_REORDERMEDIAITEM']._serialized_end=2657
+  _globals['_REORDERMEDIAREQUEST']._serialized_start=2659
+  _globals['_REORDERMEDIAREQUEST']._serialized_end=2766
+  _globals['_CATALOGSERVICE']._serialized_start=2854
+  _globals['_CATALOGSERVICE']._serialized_end=4027
 # @@protoc_insertion_point(module_scope)
