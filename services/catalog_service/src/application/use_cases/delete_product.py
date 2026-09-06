@@ -22,6 +22,4 @@ class DeleteProductUseCase:
             await uow.product.delete(product_id)
             await uow.commit()
 
-        logger.info(
-            "product.deleted", product_id=product_id, merchant_id=merchant_id
-        )
+        logger.info("product.deleted", product_id=product_id, merchant_id=merchant_id)

@@ -8,10 +8,17 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
+from src.application.use_cases.confirm_media_upload import (
+    ConfirmMediaUploadUseCase,
+)
 from src.application.use_cases.create_category import CreateCategoryUseCase
 from src.application.use_cases.create_product import CreateProductUseCase
 from src.application.use_cases.delete_category import DeleteCategoryUseCase
+from src.application.use_cases.delete_media import DeleteMediaUseCase
 from src.application.use_cases.delete_product import DeleteProductUseCase
+from src.application.use_cases.get_media_upload_url import (
+    GetMediaUploadUrlUseCase,
+)
 from src.application.use_cases.move_category import MoveCategoryUseCase
 from src.application.use_cases.read_category import (
     ReadCategoryUseCase,
@@ -21,11 +28,14 @@ from src.application.use_cases.read_list_category import (
 )
 from src.application.use_cases.read_list_products import ReadListProductsUseCase
 from src.application.use_cases.read_product import ReadProductUseCase
+from src.application.use_cases.reorder_media import ReorderMediaUseCase
 from src.application.use_cases.update_category import UpdateCategoryUseCase
 from src.application.use_cases.update_product import UpdateProductUseCase
+from src.domain.interfaces.storage import AbstractStorageService
 from src.domain.interfaces.unit_of_work import AbstractUnitOfWork
 from src.infrastructure.config.settings import Settings
 from src.infrastructure.database.unit_of_work import SQLAlchemyUnitOfWork
+from src.infrastructure.storage.s3 import S3StorageService
 
 
 class CatalogProvider(Provider):
@@ -105,3 +115,29 @@ class CatalogProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def provide_move_category(self, uow: AbstractUnitOfWork) -> MoveCategoryUseCase:
         return MoveCategoryUseCase(uow)
+
+    @provide(scope=Scope.APP)
+    def provide_storage(self, settings: Settings) -> AbstractStorageService:
+        return S3StorageService(settings)
+
+    @provide(scope=Scope.REQUEST)
+    def provide_get_media_upload_url(
+        self, uow: AbstractUnitOfWork, storage: AbstractStorageService
+    ) -> GetMediaUploadUrlUseCase:
+        return GetMediaUploadUrlUseCase(uow, storage)
+
+    @provide(scope=Scope.REQUEST)
+    def provide_confirm_media_upload(
+        self, uow: AbstractUnitOfWork
+    ) -> ConfirmMediaUploadUseCase:
+        return ConfirmMediaUploadUseCase(uow)
+
+    @provide(scope=Scope.REQUEST)
+    def provide_delete_media(
+        self, uow: AbstractUnitOfWork, storage: AbstractStorageService
+    ) -> DeleteMediaUseCase:
+        return DeleteMediaUseCase(uow, storage)
+
+    @provide(scope=Scope.REQUEST)
+    def provide_reorder_media(self, uow: AbstractUnitOfWork) -> ReorderMediaUseCase:
+        return ReorderMediaUseCase(uow)

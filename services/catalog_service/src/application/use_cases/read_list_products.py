@@ -1,4 +1,5 @@
 from src.domain.dtos.product import ProductListQueryDTO
+from src.domain.entities.media import ProductMedia
 from src.domain.entities.product import Product
 from src.domain.interfaces.unit_of_work import AbstractUnitOfWork
 
@@ -17,4 +18,15 @@ class ReadListProductsUseCase:
                 offset=query.offset, limit=query.limit, **filters
             )
             count = await uow.product.count(**filters)
-            return [Product.model_validate(product) for product in products], count
+            media_by_product = await uow.media.list_by_products(
+                [product.id for product in products]
+            )
+            result = []
+            for product in products:
+                item = Product.model_validate(product)
+                item.media = [
+                    ProductMedia.model_validate(media)
+                    for media in media_by_product.get(product.id, [])
+                ]
+                result.append(item)
+            return result, count

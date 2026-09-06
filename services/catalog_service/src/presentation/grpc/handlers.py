@@ -10,12 +10,19 @@ from grpc import ServicerContext
 from pydantic import ValidationError as PydanticValidationError
 from structlog.contextvars import bind_contextvars, clear_contextvars
 
+from src.application.use_cases.confirm_media_upload import (
+    ConfirmMediaUploadUseCase,
+)
 from src.application.use_cases.create_category import (
     CreateCategoryUseCase,
 )
 from src.application.use_cases.create_product import CreateProductUseCase
 from src.application.use_cases.delete_category import DeleteCategoryUseCase
+from src.application.use_cases.delete_media import DeleteMediaUseCase
 from src.application.use_cases.delete_product import DeleteProductUseCase
+from src.application.use_cases.get_media_upload_url import (
+    GetMediaUploadUrlUseCase,
+)
 from src.application.use_cases.move_category import MoveCategoryUseCase
 from src.application.use_cases.read_category import (
     ReadCategoryUseCase,
@@ -25,6 +32,7 @@ from src.application.use_cases.read_list_category import (
 )
 from src.application.use_cases.read_list_products import ReadListProductsUseCase
 from src.application.use_cases.read_product import ReadProductUseCase
+from src.application.use_cases.reorder_media import ReorderMediaUseCase
 from src.application.use_cases.update_category import UpdateCategoryUseCase
 from src.application.use_cases.update_product import UpdateProductUseCase
 from src.domain.dtos.category import (
@@ -32,12 +40,20 @@ from src.domain.dtos.category import (
     CategoryMoveDTO,
     CategoryUpdateDTO,
 )
+from src.domain.dtos.media import (
+    ConfirmMediaUploadRequest,
+    DeleteMediaRequest,
+    MediaUploadUrlRequest,
+    ReorderMediaItemDTO,
+    ReorderMediaRequest,
+)
 from src.domain.dtos.product import (
     ProductCreateDTO,
     ProductListQueryDTO,
     ProductUpdateDTO,
 )
 from src.domain.entities.category import Category
+from src.domain.entities.media import MediaType, ProductMedia
 from src.domain.entities.product import Product
 from src.domain.exceptions import ApplicationError, ValidationError
 from src.generated.catalog.v1 import catalog_pb2, catalog_pb2_grpc
@@ -66,7 +82,7 @@ def _to_category(category: Category) -> catalog_pb2.Category:
 
 
 def _to_product(product: Product) -> catalog_pb2.Product:
-    return catalog_pb2.Product(
+    result = catalog_pb2.Product(
         id=product.id,
         merchant_id=product.merchant_id,
         category_id=product.category_id,
@@ -78,6 +94,40 @@ def _to_product(product: Product) -> catalog_pb2.Product:
         created_at=_to_timestamp(product.created_at),
         updated_at=_to_timestamp(product.updated_at),
     )
+    result.media.extend(_to_product_media(media) for media in product.media)
+    return result
+
+
+def _to_media_type(media_type: MediaType) -> int:
+    if media_type == MediaType.IMAGE:
+        return int(catalog_pb2.MEDIA_TYPE_IMAGE)
+    return int(catalog_pb2.MEDIA_TYPE_VIDEO)
+
+
+def _from_media_type(value: int) -> MediaType:
+    if value == catalog_pb2.MEDIA_TYPE_IMAGE:
+        return MediaType.IMAGE
+    if value == catalog_pb2.MEDIA_TYPE_VIDEO:
+        return MediaType.VIDEO
+    raise ValidationError("invalid media type")
+
+
+def _to_product_media(media: ProductMedia) -> catalog_pb2.ProductMedia:
+    result = catalog_pb2.ProductMedia(
+        id=media.id,
+        product_id=media.product_id,
+        media_type=_to_media_type(media.media_type),
+        url=media.url,
+        position=media.position,
+        file_size=media.file_size,
+    )
+    if media.width is not None:
+        result.width = media.width
+    if media.height is not None:
+        result.height = media.height
+    if media.duration_seconds is not None:
+        result.duration_seconds = media.duration_seconds
+    return result
 
 
 @contextmanager
@@ -336,3 +386,111 @@ class CatalogServiceHandler(catalog_pb2_grpc.CatalogServiceServicer):
                 await _abort(context, exc)
 
             return _to_category(result)
+
+    @inject
+    async def GetMediaUploadUrl(
+        self,
+        request: catalog_pb2.GetMediaUploadUrlRequest,
+        context: ServicerContext,
+        get_media_upload_url: FromDishka[GetMediaUploadUrlUseCase],
+    ) -> catalog_pb2.GetMediaUploadUrlResponse:
+        with _request_context(product_id=request.product_id):
+            try:
+                result = await get_media_upload_url(
+                    MediaUploadUrlRequest(
+                        product_id=request.product_id,
+                        merchant_id=request.merchant_id,
+                        media_type=_from_media_type(request.media_type),
+                        content_type=request.content_type,
+                        file_size=request.file_size,
+                    )
+                )
+            except Exception as exc:
+                await _abort(context, exc)
+
+            return catalog_pb2.GetMediaUploadUrlResponse(
+                upload_url=result.upload_url,
+                storage_key=result.storage_key,
+                public_url=result.public_url,
+            )
+
+    @inject
+    async def ConfirmMediaUpload(
+        self,
+        request: catalog_pb2.ConfirmMediaUploadRequest,
+        context: ServicerContext,
+        confirm_media_upload: FromDishka[ConfirmMediaUploadUseCase],
+    ) -> catalog_pb2.ProductMedia:
+        with _request_context(product_id=request.product_id):
+            try:
+                width = request.width if request.HasField("width") else None
+                height = request.height if request.HasField("height") else None
+                duration = (
+                    request.duration_seconds
+                    if request.HasField("duration_seconds")
+                    else None
+                )
+                result = await confirm_media_upload(
+                    ConfirmMediaUploadRequest(
+                        product_id=request.product_id,
+                        merchant_id=request.merchant_id,
+                        media_type=_from_media_type(request.media_type),
+                        storage_key=request.storage_key,
+                        public_url=request.public_url,
+                        file_size=request.file_size,
+                        width=width,
+                        height=height,
+                        duration_seconds=duration,
+                    )
+                )
+            except Exception as exc:
+                await _abort(context, exc)
+
+            return _to_product_media(result)
+
+    @inject
+    async def DeleteMedia(
+        self,
+        request: catalog_pb2.DeleteMediaRequest,
+        context: ServicerContext,
+        delete_media: FromDishka[DeleteMediaUseCase],
+    ) -> Empty:
+        with _request_context(product_id=request.product_id):
+            try:
+                await delete_media(
+                    DeleteMediaRequest(
+                        product_id=request.product_id,
+                        merchant_id=request.merchant_id,
+                        media_id=request.media_id,
+                    )
+                )
+            except Exception as exc:
+                await _abort(context, exc)
+
+            return Empty()
+
+    @inject
+    async def ReorderMedia(
+        self,
+        request: catalog_pb2.ReorderMediaRequest,
+        context: ServicerContext,
+        reorder_media: FromDishka[ReorderMediaUseCase],
+    ) -> Empty:
+        with _request_context(product_id=request.product_id):
+            try:
+                await reorder_media(
+                    ReorderMediaRequest(
+                        product_id=request.product_id,
+                        merchant_id=request.merchant_id,
+                        items=[
+                            ReorderMediaItemDTO(
+                                media_id=item.media_id, position=item.position
+                            )
+                            for item in request.items
+                        ],
+                    )
+                )
+            except Exception as exc:
+                await _abort(context, exc)
+
+            return Empty()
