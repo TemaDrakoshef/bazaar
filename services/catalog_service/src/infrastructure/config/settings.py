@@ -15,6 +15,12 @@ class Settings(BaseSettings):
 
     OTEL_EXPORTER_OTLP_ENDPOINT: str = "otel-collector:4317"
 
+    S3_ENDPOINT_URL: str = "http://minio:9000"
+    S3_PUBLIC_URL: str = "http://localhost:9000"
+    S3_ACCESS_KEY: str = "minioadmin"
+    S3_SECRET_KEY: str = "miniopassword"
+    S3_BUCKET_NAME: str = "bazaar-media"
+
     @property
     def DATABASE_URL(self) -> str:
         return (
