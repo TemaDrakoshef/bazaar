@@ -16,9 +16,6 @@ class Settings(BaseSettings):
     seller_service_host: str = "seller_service"
     seller_service_port: int = 50053
 
-    seller_service_host: str = "seller_service"
-    seller_service_port: int = 50053
-
     LOG_LEVEL: str = "INFO"
     ENVIRONMENT: str = "dev"
 
