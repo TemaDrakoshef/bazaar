@@ -26,6 +26,11 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const addItem = useCartStore((state) => state.addItem)
   const slug = toProductSlug(product.id, product.title)
   const isInStock = product.is_active && product.stock > 0
+  const sortedMedia = [...(product.media ?? [])].sort(
+    (a, b) => a.position - b.position,
+  )
+  const primaryImage = sortedMedia.find((item) => item.media_type === "IMAGE")
+  const primaryMedia = primaryImage ?? sortedMedia[0] ?? null
 
   return (
     <Card
@@ -36,7 +41,27 @@ export function ProductCard({ product, className }: ProductCardProps) {
     >
       <Link href={`/product/${slug}`} className="block" aria-label={product.title}>
         <div className="flex aspect-square items-center justify-center bg-muted">
-          <ImageIcon className="h-10 w-10 text-muted-foreground/50" />
+          {primaryMedia ? (
+            primaryMedia.media_type === "VIDEO" ? (
+              <video
+                key={primaryMedia.id}
+                src={primaryMedia.url}
+                muted
+                playsInline
+                className="h-full w-full object-contain"
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={primaryMedia.id}
+                src={primaryMedia.url}
+                alt={product.title}
+                className="h-full w-full object-contain"
+              />
+            )
+          ) : (
+            <ImageIcon className="h-10 w-10 text-muted-foreground/50" />
+          )}
         </div>
       </Link>
 
