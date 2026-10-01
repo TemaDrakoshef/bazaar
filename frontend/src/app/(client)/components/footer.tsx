@@ -1,13 +1,13 @@
-import Link from "next/link";
+import Link from "next/link"
 
 export function Footer() {
-  const year = new Date().getFullYear();
+  const year = new Date().getFullYear()
 
   return (
     <footer className="border-t py-8">
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 sm:flex-row sm:px-6 lg:px-8">
         <p className="text-sm text-muted-foreground">
-          © {year} Bazaar — открытый маркетплейс
+          © {year} Bazaar — open marketplace
         </p>
         <nav className="flex items-center gap-6 text-sm" aria-label="Полезные ссылки">
           <Link
@@ -31,5 +31,5 @@ export function Footer() {
         </nav>
       </div>
     </footer>
-  );
+  )
 }
